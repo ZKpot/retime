@@ -1,0 +1,10 @@
+[package]
+name = "retime"
+version = "0.0.1"
+authors = ["Nikita Zemtsov <z-nik@ya.ru>"]
+edition = "2018"
+
+
+[dependencies.dotrix]
+git = "https://github.com/lowenware/dotrix"
+rev = "11f70ffde41122e8cfcfcb181a9813517219b6ce"
