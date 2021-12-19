@@ -1,26 +1,26 @@
-use std::f32::consts::PI;
-
 use dotrix::{
     prelude::*,
-    Assets, Camera, CubeMap, Color, World, Pipeline, Input,
+    Assets, CubeMap, Color, World, Pipeline, Input,
     assets::Mesh,
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
-    camera,
     ecs::{ Mut, },
 };
 
 mod actions;
 mod player;
 mod settings;
+mod camera;
 
 fn main() {
     Dotrix::application("ReTime")
         .with(System::from(settings::startup))
         .with(System::from(startup))
         .with(System::from(player::startup))
+        .with(System::from(camera::startup))
 
         .with(System::from(player::control))
+        .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
 
         .with(pbr::extension)
@@ -32,12 +32,10 @@ fn main() {
 fn startup(
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
-    mut camera: Mut<Camera>,
     mut input: Mut<Input>,
 ) {
     init_terrain(&mut world, &mut assets);
     init_light(&mut world);
-    init_camera(&mut camera);
     init_skybox(&mut world, &mut assets);
     actions::init_actions(&mut input);
 
@@ -99,12 +97,6 @@ fn init_light(world: &mut World) {
             },
         ))
     );
-}
-
-fn init_camera(camera: &mut Camera) {
-    camera.y_angle = PI;
-    camera.xz_angle = PI/8.0;
-    camera.distance = 10.0;
 }
 
 fn init_skybox(
