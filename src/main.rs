@@ -11,6 +11,7 @@ mod actions;
 mod player;
 mod settings;
 mod camera;
+mod physics;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -23,6 +24,15 @@ fn main() {
         .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
 
+        .with(Service::from(physics::IslandManager::new()))
+        .with(Service::from(physics::BroadPhase::new()))
+        .with(Service::from(physics::NarrowPhase::new()))
+        .with(Service::from(physics::RigidBodySet::new()))
+        .with(Service::from(physics::ColliderSet::new()))
+        .with(Service::from(physics::JointSet::new()))
+        .with(Service::from(physics::CCDSolver::new()))
+        .with(System::from(physics::step))
+
         .with(pbr::extension)
         .with(skybox::extension)
 
@@ -33,18 +43,26 @@ fn startup(
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut input: Mut<Input>,
+    mut rigid_body_set: Mut<physics::RigidBodySet>,
+    mut collider_set: Mut<physics::ColliderSet>,
 ) {
-    init_terrain(&mut world, &mut assets);
+    init_terrain(&mut world, &mut assets, &mut collider_set);
     init_light(&mut world);
     init_skybox(&mut world, &mut assets);
     actions::init_actions(&mut input);
 
-    player::spawn(&mut world, &mut assets);
+    player::spawn(
+        &mut world,
+        &mut assets,
+        &mut rigid_body_set,
+        &mut collider_set,
+    );
 }
 
 fn init_terrain(
     world: &mut World,
     assets: &mut Assets,
+    collider_set: &mut physics::ColliderSet,
 ) {
     let size = 25.0;
     let mut positions = Vec::new();
@@ -86,6 +104,10 @@ fn init_terrain(
             ..Default::default()
         }).some()
     );
+
+    // add the terrain to the collider set
+    let collider = physics::ColliderBuilder::cuboid(size, 0.1, size).build();
+    collider_set.insert(collider);
 }
 
 fn init_light(world: &mut World) {
