@@ -12,9 +12,11 @@ use dotrix::{
 
 mod actions;
 mod player;
+mod settings;
 
 fn main() {
     Dotrix::application("ReTime")
+        .with(System::from(settings::startup))
         .with(System::from(startup))
         .with(System::from(player::startup))
 
