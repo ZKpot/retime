@@ -15,6 +15,7 @@ pub fn init_actions(input: &mut Input) {
             (Action::TurnLeft, Button::Key(KeyCode::Q)),
             (Action::TurnRight, Button::Key(KeyCode::E)),
             (Action::Pause, Button::Key(KeyCode::Escape)),
+            (Action::RotateCamera, Button::MouseRight),
         ]);
 }
 
@@ -27,6 +28,7 @@ pub enum Action {
     TurnLeft,
     TurnRight,
     Pause,
+    RotateCamera,
 }
 
 // Bind Inputs and Actions

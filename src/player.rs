@@ -13,6 +13,7 @@ use crate::physics::{
     nalgebra,
 };
 
+use std::f32::consts::PI;
 const TQ_MOVE:   f32 = 25.0;
 const TQ_ROTATE: f32 = 5.0;
 
@@ -70,6 +71,7 @@ pub fn spawn(
 pub fn control(
     world: Const<World>,
     input: Const<Input>,
+    camera: Const<dotrix::Camera>,
     mut rigid_body_set: Mut<physics::RigidBodySet>,
 ) {
     let query = world.query::<(
@@ -81,6 +83,9 @@ pub fn control(
         let body = rigid_body_set.get_mut(*rigid_body).unwrap();
         let position = body.position().translation;
         let rotation = body.position().rotation;
+
+        // align forward direction with the camera view
+        props.fwd_angle = PI - camera.y_angle;
 
         let fwd_dir = vector![-props.fwd_angle.sin(), 0.0, -props.fwd_angle.cos()];
         let left_dir = vector![-props.fwd_angle.cos(), 0.0, props.fwd_angle.sin()];
