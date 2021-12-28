@@ -1,7 +1,6 @@
 use dotrix::{
     prelude::*,
     Assets, CubeMap, Color, World, Pipeline, Input,
-    assets::Mesh,
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
@@ -12,6 +11,7 @@ mod player;
 mod settings;
 mod camera;
 mod physics;
+mod terrain;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -19,10 +19,12 @@ fn main() {
         .with(System::from(startup))
         .with(System::from(player::startup))
         .with(System::from(camera::startup))
+        .with(System::from(terrain::startup))
 
         .with(System::from(player::control))
         .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
+        .with(System::from(terrain::spawn))
 
         .with(Service::from(physics::IslandManager::new()))
         .with(Service::from(physics::BroadPhase::new()))
@@ -46,7 +48,6 @@ fn startup(
     mut rigid_body_set: Mut<physics::RigidBodySet>,
     mut collider_set: Mut<physics::ColliderSet>,
 ) {
-    init_terrain(&mut world, &mut assets, &mut collider_set);
     init_light(&mut world);
     init_skybox(&mut world, &mut assets);
     actions::init_actions(&mut input);
@@ -57,57 +58,6 @@ fn startup(
         &mut rigid_body_set,
         &mut collider_set,
     );
-}
-
-fn init_terrain(
-    world: &mut World,
-    assets: &mut Assets,
-    collider_set: &mut physics::ColliderSet,
-) {
-    let size = 25.0;
-    let mut positions = Vec::new();
-    let mut uvs = Vec::new();
-
-    positions.push([-size, 0.0, -size]);
-    positions.push([-size, 0.0,  size]);
-    positions.push([ size, 0.0, -size]);
-    positions.push([ size, 0.0, -size]);
-    positions.push([-size, 0.0,  size]);
-    positions.push([ size, 0.0,  size]);
-
-    uvs.push([ 0.0,  0.0]);
-    uvs.push([ 0.0, size]);
-    uvs.push([size,  0.0]);
-    uvs.push([size,  0.0]);
-    uvs.push([ 0.0, size]);
-    uvs.push([size, size]);
-
-    let normals = Mesh::calculate_normals(&positions, None);
-
-    let mut mesh = Mesh::default();
-
-    mesh.with_vertices(&positions);
-    mesh.with_vertices(&normals);
-    mesh.with_vertices(&uvs);
-
-    // Store mesh and get its ID
-    let mesh = assets.store(mesh);
-
-    // import terrain texture and get its ID
-    assets.import("assets/terrain.png");
-    let texture = assets.register("terrain");
-
-    world.spawn(
-        (pbr::solid::Entity {
-            mesh,
-            texture,
-            ..Default::default()
-        }).some()
-    );
-
-    // add the terrain to the collider set
-    let collider = physics::ColliderBuilder::cuboid(size, 0.1, size).build();
-    collider_set.insert(collider);
 }
 
 fn init_light(world: &mut World) {
