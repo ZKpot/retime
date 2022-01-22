@@ -3,8 +3,13 @@ name = "retime"
 version = "0.0.1"
 authors = ["Nikita Zemtsov <z-nik@ya.ru>"]
 edition = "2018"
+resolver = "2"
 
 
 [dependencies.dotrix]
 git = "https://github.com/lowenware/dotrix"
-rev = "11f70ffde41122e8cfcfcb181a9813517219b6ce"
+rev = "a18438a4053f10e2af7190fcb84293fe3d995165"
+
+[dependencies.rapier3d]
+version = "0.11.1"
+features = [ "simd-stable" ]
