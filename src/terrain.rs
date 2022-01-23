@@ -28,7 +28,7 @@ pub fn spawn (
     mut context: ecs::Context<Context>,
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
-    mut collider_set: Mut<physics::ColliderSet>,
+    mut physics_state: Mut<physics::State>,
 ) {
     let texture = assets.register("terrain::texture");
     let mesh_id = assets.register("terrain::mesh");
@@ -69,7 +69,9 @@ pub fn spawn (
             vertices,
             indices,
         ).build();
-        collider_set.insert(collider);
+
+        physics_state.physics.as_mut().expect("physics::State must be defined")
+            .collider_set.insert(collider);
 
         context.initialized = true;
     }

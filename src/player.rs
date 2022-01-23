@@ -38,9 +38,10 @@ pub fn startup(
 pub fn spawn(
     world: &mut World,
     assets: &mut Assets,
-    rigid_body_set: &mut physics::RigidBodySet,
-    collider_set: &mut physics::ColliderSet,
+    physics_state: &mut physics::State,
 ) {
+    let state = physics_state.physics.as_mut().expect("physics::State must be defined");
+
     let texture = assets.register("player::texture");
     let mesh = assets.register("player::mesh");
 
@@ -49,8 +50,12 @@ pub fn spawn(
         .angular_damping(1.0)
         .build();
     let collider = physics::ColliderBuilder::ball(1.0).restitution(0.7).build();
-    let ball_body_handle = rigid_body_set.insert(rigid_body);
-    collider_set.insert_with_parent(collider, ball_body_handle, rigid_body_set);
+    let ball_body_handle = state.rigid_body_set.insert(rigid_body);
+    state.collider_set.insert_with_parent(
+        collider,
+        ball_body_handle,
+        &mut state.rigid_body_set
+    );
 
     world.spawn(Some((
         Model::from(mesh),
@@ -72,13 +77,17 @@ pub fn control(
     world: Const<World>,
     input: Const<Input>,
     camera: Const<dotrix::Camera>,
-    mut rigid_body_set: Mut<physics::RigidBodySet>,
+    mut physics_state: Mut<physics::State>,
 ) {
     let query = world.query::<(
         &mut Transform, &physics::RigidBodyHandle, &mut Properties,
     )>();
 
     for (transform, rigid_body, props) in query {
+
+        let rigid_body_set = &mut physics_state.physics
+            .as_mut().expect("physics::State must be defined")
+            .rigid_body_set;
 
         let body = rigid_body_set.get_mut(*rigid_body).unwrap();
         let position = body.position().translation;
