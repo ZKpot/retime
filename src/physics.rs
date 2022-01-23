@@ -4,6 +4,7 @@ use dotrix::{
     ecs::{ Mut, Context, },
 };
 
+#[derive(Clone)]
 pub struct PhysicsState {
     pub island_manager: IslandManager,
     pub broad_phase: BroadPhase,

@@ -12,6 +12,7 @@ mod settings;
 mod camera;
 mod physics;
 mod terrain;
+mod time;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -21,12 +22,15 @@ fn main() {
         .with(System::from(camera::startup))
         .with(System::from(terrain::startup))
 
+        .with(System::from(time::rewind))
         .with(System::from(player::control))
         .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
         .with(System::from(terrain::spawn))
+        .with(System::from(time::update))
 
         .with(Service::from(physics::State::default()))
+        .with(Service::from(time::Stack::default()))
         .with(System::from(physics::step))
 
         .with(pbr::extension)
