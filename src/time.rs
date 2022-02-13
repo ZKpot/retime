@@ -10,7 +10,7 @@ use crate::actions::Action;
 
 use std::collections::VecDeque;
 
-const STACK_MAX_SIZE: usize = 600;
+const STACK_MAX_SIZE: usize = 900;
 
 pub struct Stack {
     physics_state: VecDeque<Option<physics::PhysicsState>>,
