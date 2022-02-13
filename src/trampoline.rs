@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use dotrix::{
-    Assets, World, Transform,
+    Assets, World, Transform, Input,
     pbr::{ Model, Material, },
     math::{ Vec3, },
     ecs::{ self, Mut, Const, },
@@ -13,6 +13,7 @@ use crate::physics::{ self, vector, nalgebra, };
 use crate::player;
 use crate::time;
 use crate::camera;
+use crate::actions::Action;
 
 const TRAMP_X: f32 = 72.0;
 const TRAMP_Y: f32 = 0.01;
@@ -138,10 +139,20 @@ pub fn control(
     mut context: ecs::Context<Context>,
     world: Const<World>,
     time_stack: Const<time::Stack>,
+    input: Const<Input>,
     mut physics_state: Mut<physics::State>,
 ) {
     if !time_stack.rewind_active {
         let mut state_changed = false;
+
+        // query trampoline
+        let query = world.query::<(&camera::Properties, )>();
+
+        let mut camera_active = false;
+
+        for (camera_prop,) in query {
+            camera_active = camera_prop.active;
+        }
 
         // query player
         let query = world.query::<(
@@ -164,7 +175,10 @@ pub fn control(
                     (position.z - TRAMP_Z).powf(2.0)
                 ).sqrt();
 
-                if distance_to_tramp <= TRAMP_MIN_DIST {
+                if (distance_to_tramp <= TRAMP_MIN_DIST) &&
+                    input.is_action_activated(Action::TurnRight) &&
+                    camera_active
+                {
                     println!("dist to tramp: {:?}", distance_to_tramp);
                     body.apply_impulse(vector![0.0, 150.0, 0.0], true);
                     context.active = false;

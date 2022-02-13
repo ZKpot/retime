@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use dotrix::{
     Transform, World, Input,
-    ecs::{ Mut, Const, Context, },
+    ecs::{ Mut, Const, },
     math::{ Vec3, },
 };
 
@@ -25,15 +25,15 @@ impl Default for Properties {
     }
 }
 
-pub struct Camera {
+pub struct State {
     control_active: bool,
-    index: usize,
+    pub index: usize,
     position: Option<Vec3>,
     distance: Option<f32>,
     tilt: Option<f32>
 }
 
-impl Default for Camera {
+impl Default for State {
     fn default() -> Self {
         Self {
             control_active: false,
@@ -54,7 +54,7 @@ pub fn startup (
 }
 
 pub fn control (
-    mut context: Context<Camera>,
+    mut state: Mut<State>,
     world: Const<World>,
     input: Const<Input>,
     mut camera: Mut<dotrix::Camera>,
@@ -78,7 +78,7 @@ pub fn control (
     }
 
     if input.is_action_activated(Action::MoveCamera) {
-        context.index += 1;
+        state.index += 1;
     }
 
     let mut i: usize = 0;
@@ -87,42 +87,42 @@ pub fn control (
         &mut Transform, &mut Properties,
     )>();
 
-    if context.index > 0 {
+    if state.index > 0 {
         for (transform, props) in query {
             i += 1;
 
-            if context.index == i {
-                context.position = Some(transform.translate);
+            if state.index == i {
+                state.position = Some(transform.translate);
                 props.active = true;
             } else if props.active {
                 props.active = false;
             }
         }
     } else {
-        context.position = None;
+        state.position = None;
     }
 
 
-    if context.index > i {
-        context.index = 0;
+    if state.index > i {
+        state.index = 0;
     }
 
-    match context.position {
+    match state.position {
         None => {
-            if let Some(distance) = context.distance.take() {
+            if let Some(distance) = state.distance.take() {
                 camera.distance = distance;
             }
 
-            if let Some(tilt) = context.tilt.take() {
+            if let Some(tilt) = state.tilt.take() {
                 camera.tilt = tilt;
             }
 
             if input.is_action_deactivated(Action::RotateCamera) {
-                context.control_active = true;
+                state.control_active = true;
             }
 
             if !input.is_action_hold(Action::RotateCamera) {
-                camera.pan = if context.control_active {
+                camera.pan = if state.control_active {
                     let mut pan_error = PI - camera.pan;
 
                     if pan_error.abs() > PI {
@@ -130,7 +130,7 @@ pub fn control (
                     }
 
                     if pan_error.abs() < PI/128.0 {
-                        context.control_active = false;
+                        state.control_active = false;
                         PI
                     } else {
                         camera.pan + pan_error * CAMERA_SPD

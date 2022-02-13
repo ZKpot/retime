@@ -37,6 +37,7 @@ fn main() {
 
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
+        .with(Service::from(camera::State::default()))
         .with(System::from(physics::step))
 
         .with(pbr::extension)

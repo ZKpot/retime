@@ -7,6 +7,7 @@ use dotrix::{
 };
 
 use crate::actions;
+use crate::camera;
 use std::collections::VecDeque;
 
 use crate::physics::{
@@ -93,6 +94,7 @@ pub fn control(
     world: Const<World>,
     input: Const<Input>,
     camera: Const<dotrix::Camera>,
+    camera_state: Const<camera::State>,
     mut physics_state: Mut<physics::State>,
 ) {
     let query = world.query::<(
@@ -119,29 +121,31 @@ pub fn control(
         let mut torque_move = vector![0.0, 0.0, 0.0];
         let mut torque_rotate = vector![0.0, 0.0, 0.0];
 
-        if input.is_action_hold(actions::Action::MoveForward) {
-            torque_move = torque_move + fwd_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveBackward) {
-            torque_move = torque_move - fwd_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveLeft) {
-            torque_move = torque_move + left_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveRight) {
-            torque_move = torque_move - left_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::TurnLeft) {
-            torque_rotate += vector![0.0,  1.0, 0.0];
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::TurnRight) {
-            torque_rotate += vector![0.0, -1.0, 0.0];
-            state.override_action = true;
+        if camera_state.index == 0 {
+            if input.is_action_hold(actions::Action::MoveForward) {
+                torque_move = torque_move + fwd_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveBackward) {
+                torque_move = torque_move - fwd_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveLeft) {
+                torque_move = torque_move + left_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveRight) {
+                torque_move = torque_move - left_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::TurnLeft) {
+                torque_rotate += vector![0.0,  1.0, 0.0];
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::TurnRight) {
+                torque_rotate += vector![0.0, -1.0, 0.0];
+                state.override_action = true;
+            }
         }
 
         if !state.override_action {
