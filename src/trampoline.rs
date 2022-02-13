@@ -12,6 +12,7 @@ use dotrix::{
 use crate::physics::{ self, vector, nalgebra, };
 use crate::player;
 use crate::time;
+use crate::camera;
 
 const TRAMP_X: f32 = 72.0;
 const TRAMP_Y: f32 = 0.01;
@@ -78,6 +79,7 @@ pub fn spawn(
             },
             Render::default(),
             State::default(),
+            camera::Properties::default(),
         )));
 
         // add trampoline the collider set
