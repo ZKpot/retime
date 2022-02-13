@@ -12,6 +12,7 @@ mod settings;
 mod camera;
 mod physics;
 mod terrain;
+mod time;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -21,18 +22,15 @@ fn main() {
         .with(System::from(camera::startup))
         .with(System::from(terrain::startup))
 
+        .with(System::from(time::rewind))
         .with(System::from(player::control))
         .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
         .with(System::from(terrain::spawn))
+        .with(System::from(time::update))
 
-        .with(Service::from(physics::IslandManager::new()))
-        .with(Service::from(physics::BroadPhase::new()))
-        .with(Service::from(physics::NarrowPhase::new()))
-        .with(Service::from(physics::RigidBodySet::new()))
-        .with(Service::from(physics::ColliderSet::new()))
-        .with(Service::from(physics::JointSet::new()))
-        .with(Service::from(physics::CCDSolver::new()))
+        .with(Service::from(physics::State::default()))
+        .with(Service::from(time::Stack::default()))
         .with(System::from(physics::step))
 
         .with(pbr::extension)
@@ -45,8 +43,7 @@ fn startup(
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut input: Mut<Input>,
-    mut rigid_body_set: Mut<physics::RigidBodySet>,
-    mut collider_set: Mut<physics::ColliderSet>,
+    mut physics_state: Mut<physics::State>,
 ) {
     init_light(&mut world);
     init_skybox(&mut world, &mut assets);
@@ -55,8 +52,7 @@ fn startup(
     player::spawn(
         &mut world,
         &mut assets,
-        &mut rigid_body_set,
-        &mut collider_set,
+        &mut physics_state,
     );
 }
 

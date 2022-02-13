@@ -43,7 +43,7 @@ pub fn control (
 
     // make camera follow the player
     let query = world.query::<(
-        &mut Transform, &mut player::Properties,
+        &mut Transform, &mut player::State,
     )>();
 
     for (transform, _) in query {
