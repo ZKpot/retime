@@ -5,28 +5,43 @@ use dotrix::{
     math::{ Vec3, Quat },
 };
 
-use crate::actions::Action;
+use crate::actions;
+use std::collections::VecDeque;
 
 use crate::physics::{
     self,
     vector,
     nalgebra,
+    Vector,
+    Real,
 };
 
 use std::f32::consts::PI;
 const TQ_MOVE:   f32 = 25.0;
 const TQ_ROTATE: f32 = 5.0;
 
-pub struct Properties {
+pub struct State {
     pub fwd_angle: f32,
+    pub override_action: bool,
+    pub current_action: Option<Action>,
+    pub action_stack: VecDeque<Action>,
 }
 
-impl Default for Properties {
+impl Default for State {
     fn default() -> Self {
         Self {
             fwd_angle: 0.0,
+            override_action: false,
+            current_action: None,
+            action_stack: VecDeque::new(),
         }
     }
+}
+
+#[derive(Clone)]
+pub struct Action {
+    pub torque_move: Vector<Real>,
+    pub torque_rotate: Vector<Real>,
 }
 
 pub fn startup(
@@ -67,7 +82,7 @@ pub fn spawn(
             translate: Vec3::new(0.0, 10.0, 0.0),
             ..Default::default()
         },
-        Properties::default(),
+        State::default(),
         ball_body_handle,
         Pipeline::default(),
     )));
@@ -80,10 +95,10 @@ pub fn control(
     mut physics_state: Mut<physics::State>,
 ) {
     let query = world.query::<(
-        &mut Transform, &physics::RigidBodyHandle, &mut Properties,
+        &mut Transform, &physics::RigidBodyHandle, &mut State,
     )>();
 
-    for (transform, rigid_body, props) in query {
+    for (transform, rigid_body, state) in query {
 
         let rigid_body_set = &mut physics_state.physics
             .as_mut().expect("physics::State must be defined")
@@ -94,33 +109,51 @@ pub fn control(
         let rotation = body.position().rotation;
 
         // align forward direction with the camera view
-        props.fwd_angle = PI - camera.y_angle;
+        state.fwd_angle = PI - camera.y_angle;
 
-        let fwd_dir = vector![-props.fwd_angle.sin(), 0.0, -props.fwd_angle.cos()];
-        let left_dir = vector![-props.fwd_angle.cos(), 0.0, props.fwd_angle.sin()];
+        let fwd_dir = vector![-state.fwd_angle.sin(), 0.0, -state.fwd_angle.cos()];
+        let left_dir = vector![-state.fwd_angle.cos(), 0.0, state.fwd_angle.sin()];
 
         // apply torque
         let mut torque_move = vector![0.0, 0.0, 0.0];
         let mut torque_rotate = vector![0.0, 0.0, 0.0];
 
-        if input.is_action_hold(Action::MoveForward) {
+        if input.is_action_hold(actions::Action::MoveForward) {
             torque_move = torque_move + fwd_dir;
+            state.override_action = true;
         }
-        if input.is_action_hold(Action::MoveBackward) {
+        if input.is_action_hold(actions::Action::MoveBackward) {
             torque_move = torque_move - fwd_dir;
+            state.override_action = true;
         }
-        if input.is_action_hold(Action::MoveLeft) {
+        if input.is_action_hold(actions::Action::MoveLeft) {
             torque_move = torque_move + left_dir;
+            state.override_action = true;
         }
-        if input.is_action_hold(Action::MoveRight) {
+        if input.is_action_hold(actions::Action::MoveRight) {
             torque_move = torque_move - left_dir;
+            state.override_action = true;
         }
-        if input.is_action_hold(Action::TurnLeft) {
+        if input.is_action_hold(actions::Action::TurnLeft) {
             torque_rotate += vector![0.0,  1.0, 0.0];
+            state.override_action = true;
         }
-        if input.is_action_hold(Action::TurnRight) {
+        if input.is_action_hold(actions::Action::TurnRight) {
             torque_rotate += vector![0.0, -1.0, 0.0];
+            state.override_action = true;
         }
+
+        if !state.override_action {
+            if let Some(current_action) = &state.current_action {
+                torque_move = current_action.torque_move;
+                torque_rotate = current_action.torque_rotate;
+            }
+        }
+
+        state.current_action = Some(Action {
+            torque_move,
+            torque_rotate,
+        });
 
         body.apply_torque(torque_move*TQ_MOVE, true);
         body.apply_torque(torque_rotate*TQ_ROTATE, true);
