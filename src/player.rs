@@ -1,8 +1,9 @@
 use dotrix::{
-    Assets, World, Pipeline, Transform, Input,
+    Assets, World, Transform, Input,
     pbr::{ Model, Material, },
     ecs::{ Mut, Const, },
     math::{ Vec3, Quat },
+    renderer::Render,
 };
 
 use crate::actions;
@@ -82,9 +83,9 @@ pub fn spawn(
             translate: Vec3::new(0.0, 10.0, 0.0),
             ..Default::default()
         },
+        Render::default(),
         State::default(),
         ball_body_handle,
-        Pipeline::default(),
     )));
 }
 
@@ -109,7 +110,7 @@ pub fn control(
         let rotation = body.position().rotation;
 
         // align forward direction with the camera view
-        state.fwd_angle = PI - camera.y_angle;
+        state.fwd_angle = PI - camera.pan;
 
         let fwd_dir = vector![-state.fwd_angle.sin(), 0.0, -state.fwd_angle.cos()];
         let left_dir = vector![-state.fwd_angle.cos(), 0.0, state.fwd_angle.sin()];

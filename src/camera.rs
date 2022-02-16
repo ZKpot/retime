@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use dotrix::{
     Transform, World, Input,
     ecs::{ Mut, Const, Context, },
-    math::Point3,
+    math::{ Vec3, },
 };
 
 use crate::player;
@@ -26,8 +26,8 @@ impl Default for Camera {
 pub fn startup (
     mut camera: Mut<dotrix::Camera>,
 ) {
-    camera.y_angle = PI;
-    camera.xz_angle = PI/8.0;
+    camera.pan = PI;
+    camera.tilt = PI/8.0;
     camera.distance = 10.0;
 }
 
@@ -37,8 +37,8 @@ pub fn control (
     input: Const<Input>,
     mut camera: Mut<dotrix::Camera>,
 ) {
-    if camera.xz_angle < 0.0 {
-        camera.xz_angle = 0.0;
+    if camera.tilt < 0.0 {
+        camera.tilt = 0.0;
     };
 
     // make camera follow the player
@@ -48,7 +48,7 @@ pub fn control (
 
     for (transform, _) in query {
         // update camera properties
-        camera.target = Point3::new(
+        camera.target = Vec3::new(
             transform.translate.x,
             transform.translate.y,
             transform.translate.z
@@ -59,8 +59,8 @@ pub fn control (
         }
 
         if !input.is_action_hold(Action::RotateCamera) {
-            camera.y_angle = if context.control_active {
-                let mut y_angle_error = PI - camera.y_angle;
+            camera.pan = if context.control_active {
+                let mut y_angle_error = PI - camera.pan;
 
                 if y_angle_error.abs() > PI {
                     y_angle_error = -y_angle_error.signum()*PI + y_angle_error%PI;
@@ -70,7 +70,7 @@ pub fn control (
                     context.control_active = false;
                     PI
                 } else {
-                    camera.y_angle + y_angle_error * CAMERA_SPD
+                    camera.pan + y_angle_error * CAMERA_SPD
                 }
             } else {
                 PI

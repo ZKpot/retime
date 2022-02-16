@@ -1,9 +1,10 @@
 use dotrix::{
     prelude::*,
-    Assets, CubeMap, Color, World, Pipeline, Input,
+    Assets, CubeMap, Color, World, Input,
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    renderer::Render,
 };
 
 mod actions;
@@ -97,6 +98,6 @@ fn init_skybox(
             front: assets.register("skybox_front"),
             ..Default::default()
         },
-        Pipeline::default()
+        Render::default(),
     )));
 }

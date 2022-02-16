@@ -1,11 +1,12 @@
 use std::f32::consts::PI;
 
 use dotrix::{
-    Assets, World, Transform, Pipeline,
+    Assets, World, Transform,
     pbr::{ Model, Material, },
     math::{ Vec3, },
     ecs::{ self, Mut, Const, },
     math::{ Quat },
+    renderer::Render,
 };
 
 use crate::physics::{ self, vector, nalgebra, };
@@ -75,8 +76,8 @@ pub fn spawn(
                 rotate: Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin()),
                 ..Default::default()
             },
+            Render::default(),
             State::default(),
-            Pipeline::default(),
         )));
 
         // add trampoline the collider set
@@ -84,7 +85,7 @@ pub fn spawn(
 
         let mut indices  = Vec::new();
 
-        let vertices = mesh.vertices_as::<[f32; 3]>(0)
+        let vertices = mesh.vertices_as::<[f32; 3]>(0).collect::<Vec<_>>()
             .iter().map(|elem| physics::nalgebra::Point3::new(
                     elem[0],
                     elem[1],
@@ -92,7 +93,8 @@ pub fn spawn(
                 )
             ).collect();
 
-        let indices_mesh  = mesh.indices();
+        let indices_mesh = mesh.indices().take()
+        .expect("trampoline mesh should contain indices");
 
         for i in 0..indices_mesh.len()/3 {
             indices.push([
@@ -122,8 +124,8 @@ pub fn spawn(
                 rotate: Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin()),
                 scale: Vec3::new(0.4, 1.0, 0.4)
             },
+            Render::default(),
             State::default(),
-            Pipeline::default(),
         )));
 
         context.initialized = true;

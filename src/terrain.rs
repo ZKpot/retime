@@ -48,14 +48,16 @@ pub fn spawn (
         let mut indices  = Vec::new();
 
         let vertices = mesh.vertices_as::<[f32; 3]>(0)
-            .iter().map(|elem| physics::nalgebra::Point3::new(
+            .collect::<Vec<_>>().iter()
+            .map(|elem| physics::nalgebra::Point3::new(
                     elem[0],
                     elem[1],
                     elem[2],
                 )
             ).collect();
 
-        let indices_mesh  = mesh.indices();
+        let indices_mesh = mesh.indices().take()
+            .expect("terrain mesh should contain indices");
 
         for i in 0..indices_mesh.len()/3 {
             indices.push([
