@@ -1,11 +1,13 @@
 use dotrix::{
-    Assets, World, Pipeline, Transform, Input,
+    Assets, World, Transform, Input,
     pbr::{ Model, Material, },
     ecs::{ Mut, Const, },
     math::{ Vec3, Quat },
+    renderer::Render,
 };
 
 use crate::actions;
+use crate::camera;
 use std::collections::VecDeque;
 
 use crate::physics::{
@@ -82,9 +84,9 @@ pub fn spawn(
             translate: Vec3::new(0.0, 10.0, 0.0),
             ..Default::default()
         },
+        Render::default(),
         State::default(),
         ball_body_handle,
-        Pipeline::default(),
     )));
 }
 
@@ -92,6 +94,7 @@ pub fn control(
     world: Const<World>,
     input: Const<Input>,
     camera: Const<dotrix::Camera>,
+    camera_state: Const<camera::State>,
     mut physics_state: Mut<physics::State>,
 ) {
     let query = world.query::<(
@@ -109,7 +112,7 @@ pub fn control(
         let rotation = body.position().rotation;
 
         // align forward direction with the camera view
-        state.fwd_angle = PI - camera.y_angle;
+        state.fwd_angle = PI - camera.pan;
 
         let fwd_dir = vector![-state.fwd_angle.sin(), 0.0, -state.fwd_angle.cos()];
         let left_dir = vector![-state.fwd_angle.cos(), 0.0, state.fwd_angle.sin()];
@@ -118,29 +121,31 @@ pub fn control(
         let mut torque_move = vector![0.0, 0.0, 0.0];
         let mut torque_rotate = vector![0.0, 0.0, 0.0];
 
-        if input.is_action_hold(actions::Action::MoveForward) {
-            torque_move = torque_move + fwd_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveBackward) {
-            torque_move = torque_move - fwd_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveLeft) {
-            torque_move = torque_move + left_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::MoveRight) {
-            torque_move = torque_move - left_dir;
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::TurnLeft) {
-            torque_rotate += vector![0.0,  1.0, 0.0];
-            state.override_action = true;
-        }
-        if input.is_action_hold(actions::Action::TurnRight) {
-            torque_rotate += vector![0.0, -1.0, 0.0];
-            state.override_action = true;
+        if camera_state.index == 0 {
+            if input.is_action_hold(actions::Action::MoveForward) {
+                torque_move = torque_move + fwd_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveBackward) {
+                torque_move = torque_move - fwd_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveLeft) {
+                torque_move = torque_move + left_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::MoveRight) {
+                torque_move = torque_move - left_dir;
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::TurnLeft) {
+                torque_rotate += vector![0.0,  1.0, 0.0];
+                state.override_action = true;
+            }
+            if input.is_action_hold(actions::Action::TurnRight) {
+                torque_rotate += vector![0.0, -1.0, 0.0];
+                state.override_action = true;
+            }
         }
 
         if !state.override_action {

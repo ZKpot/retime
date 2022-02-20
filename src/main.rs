@@ -1,9 +1,10 @@
 use dotrix::{
     prelude::*,
-    Assets, CubeMap, Color, World, Pipeline, Input,
+    Assets, CubeMap, Color, World, Input,
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    renderer::Render,
 };
 
 mod actions;
@@ -13,6 +14,7 @@ mod camera;
 mod physics;
 mod terrain;
 mod time;
+mod trampoline;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -21,16 +23,21 @@ fn main() {
         .with(System::from(player::startup))
         .with(System::from(camera::startup))
         .with(System::from(terrain::startup))
+        .with(System::from(trampoline::startup))
+
+        .with(System::from(terrain::spawn))
+        .with(System::from(trampoline::spawn))
 
         .with(System::from(time::rewind))
         .with(System::from(player::control))
+        .with(System::from(trampoline::control))
         .with(System::from(dotrix::camera::control))
         .with(System::from(camera::control))
-        .with(System::from(terrain::spawn))
         .with(System::from(time::update))
 
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
+        .with(Service::from(camera::State::default()))
         .with(System::from(physics::step))
 
         .with(pbr::extension)
@@ -92,6 +99,6 @@ fn init_skybox(
             front: assets.register("skybox_front"),
             ..Default::default()
         },
-        Pipeline::default()
+        Render::default(),
     )));
 }
