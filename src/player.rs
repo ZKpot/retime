@@ -2,13 +2,13 @@ use dotrix::{
     Assets, World, Transform, Input,
     pbr::{ Model, Material, },
     ecs::{ Mut, Const, },
-    math::{ Vec3, Quat },
+    math::{ Vec3 },
     renderer::Render,
 };
 
 use crate::actions;
 use crate::camera;
-use std::collections::VecDeque;
+use crate::time;
 
 use crate::physics::{
     self,
@@ -19,21 +19,29 @@ use crate::physics::{
 };
 
 use std::f32::consts::PI;
+use std::collections::VecDeque;
+
 const TQ_MOVE:   f32 = 25.0;
 const TQ_ROTATE: f32 = 5.0;
 
 pub struct State {
     pub fwd_angle: f32,
-    pub override_action: bool,
     pub current_action: Option<Action>,
-    pub action_stack: VecDeque<Action>,
+    pub action_stack: VecDeque<Option<Action>>,
+}
+
+impl State {
+    pub fn clear_action_stack(&mut self, index: usize) {
+        for i in 0..index {
+            self.action_stack[i] = None;
+        }
+    }
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
             fwd_angle: 0.0,
-            override_action: false,
             current_action: None,
             action_stack: VecDeque::new(),
         }
@@ -96,20 +104,19 @@ pub fn control(
     camera: Const<dotrix::Camera>,
     camera_state: Const<camera::State>,
     mut physics_state: Mut<physics::State>,
+    time_stack: Const<time::Stack>,
 ) {
     let query = world.query::<(
-        &mut Transform, &physics::RigidBodyHandle, &mut State,
+        &physics::RigidBodyHandle, &mut State,
     )>();
 
-    for (transform, rigid_body, state) in query {
+    for (rigid_body, state) in query {
 
         let rigid_body_set = &mut physics_state.physics
             .as_mut().expect("physics::State must be defined")
             .rigid_body_set;
 
         let body = rigid_body_set.get_mut(*rigid_body).unwrap();
-        let position = body.position().translation;
-        let rotation = body.position().rotation;
 
         // align forward direction with the camera view
         state.fwd_angle = PI - camera.pan;
@@ -121,35 +128,39 @@ pub fn control(
         let mut torque_move = vector![0.0, 0.0, 0.0];
         let mut torque_rotate = vector![0.0, 0.0, 0.0];
 
+        let mut is_any_action = false;
+
         if camera_state.index == 0 {
             if input.is_action_hold(actions::Action::MoveForward) {
                 torque_move = torque_move + fwd_dir;
-                state.override_action = true;
+                is_any_action = true;
             }
             if input.is_action_hold(actions::Action::MoveBackward) {
                 torque_move = torque_move - fwd_dir;
-                state.override_action = true;
+                is_any_action = true;
             }
             if input.is_action_hold(actions::Action::MoveLeft) {
                 torque_move = torque_move + left_dir;
-                state.override_action = true;
+                is_any_action = true;
             }
             if input.is_action_hold(actions::Action::MoveRight) {
                 torque_move = torque_move - left_dir;
-                state.override_action = true;
+                is_any_action = true;
             }
             if input.is_action_hold(actions::Action::TurnLeft) {
                 torque_rotate += vector![0.0,  1.0, 0.0];
-                state.override_action = true;
+                is_any_action = true;
             }
             if input.is_action_hold(actions::Action::TurnRight) {
                 torque_rotate += vector![0.0, -1.0, 0.0];
-                state.override_action = true;
+                is_any_action = true;
             }
         }
 
-        if !state.override_action {
-            if let Some(current_action) = &state.current_action {
+        if is_any_action {
+            state.clear_action_stack(time_stack.index);
+        } else {
+            if let Some(current_action) = state.current_action.take() {
                 torque_move = current_action.torque_move;
                 torque_rotate = current_action.torque_rotate;
             }
@@ -162,17 +173,5 @@ pub fn control(
 
         body.apply_torque(torque_move*TQ_MOVE, true);
         body.apply_torque(torque_rotate*TQ_ROTATE, true);
-
-        // update model transfrom
-        transform.translate.x = position.x;
-        transform.translate.y = position.y;
-        transform.translate.z = position.z;
-
-        transform.rotate = Quat::new(
-            rotation.into_inner().w,
-            rotation.into_inner().i,
-            rotation.into_inner().j,
-            rotation.into_inner().k,
-        );
     }
 }

@@ -41,7 +41,10 @@ fn main() {
         )
 
         .with(
-            System::from(time::rewind).with(StateStack::on::<states::RunLevel>())
+            System::from(time::rewind).with(StateStack::on::<states::RewindTime>())
+        )
+        .with(
+            System::from(time::replay).with(StateStack::on::<states::RunLevel>())
         )
         .with(
             System::from(player::control).with(StateStack::on::<states::RunLevel>())
@@ -49,20 +52,28 @@ fn main() {
         .with(
             System::from(trampoline::control).with(StateStack::on::<states::RunLevel>())
         )
+
         .with(
-            System::from(dotrix::camera::control).with(StateStack::on::<states::RunLevel>())
+            System::from(time::update_stacks)
+                .with(StateStack::on::<states::RunLevel>())
+        )
+
+        .with(System::from(physics::update_models))
+        .with(System::from(physics::step).with(StateStack::on::<states::RunLevel>()))
+        .with(
+            System::from(dotrix::camera::control)
+                .with(StateStack::on::<states::RunLevel>())
+                .with(StateStack::on::<states::RewindTime>())
         )
         .with(
-            System::from(camera::control).with(StateStack::on::<states::RunLevel>())
-        )
-        .with(
-            System::from(time::update).with(StateStack::on::<states::RunLevel>())
+            System::from(camera::control)
+                .with(StateStack::on::<states::RunLevel>())
+                .with(StateStack::on::<states::RewindTime>())
         )
 
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
-        .with(System::from(physics::step))
 
         .with(pbr::extension)
         .with(skybox::extension)

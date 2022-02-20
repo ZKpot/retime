@@ -11,7 +11,6 @@ use dotrix::{
 
 use crate::physics::{ self, vector, nalgebra, };
 use crate::player;
-use crate::time;
 use crate::camera;
 use crate::actions::Action;
 
@@ -132,78 +131,75 @@ pub fn spawn(
 pub fn control(
     mut context: ecs::Context<Context>,
     world: Const<World>,
-    time_stack: Const<time::Stack>,
     input: Const<Input>,
     mut physics_state: Mut<physics::State>,
 ) {
-    if !time_stack.rewind_active {
-        let mut state_changed = false;
+    let mut state_changed = false;
 
-        // query trampoline
-        let query = world.query::<(&camera::Properties, )>();
+    // query trampoline
+    let query = world.query::<(&camera::Properties, )>();
 
-        let mut camera_active = false;
+    let mut camera_active = false;
 
-        for (camera_prop,) in query {
-            camera_active = camera_prop.active;
+    for (camera_prop,) in query {
+        camera_active = camera_prop.active;
+    }
+
+    // query player
+    let query = world.query::<(
+        &physics::RigidBodyHandle,
+        &mut player::State,
+    )>();
+
+    for (rigid_body, _) in query {
+        let rigid_body_set = &mut physics_state.physics
+            .as_mut().expect("physics::State must be defined")
+            .rigid_body_set;
+
+        let body = rigid_body_set.get_mut(*rigid_body).unwrap();
+        let position = body.position().translation;
+
+        if context.active {
+            let distance_to_tramp = (
+                (position.x - TRAMP_X).powf(2.0) +
+                position.y.powf(2.0) +
+                (position.z - TRAMP_Z).powf(2.0)
+            ).sqrt();
+
+            if (distance_to_tramp <= TRAMP_MIN_DIST) &&
+                input.is_action_activated(Action::TurnRight) &&
+                camera_active
+            {
+                println!("dist to tramp: {:?}", distance_to_tramp);
+                body.apply_impulse(vector![0.0, 150.0, 0.0], true);
+                context.active = false;
+                state_changed = true;
+            }
+        } else {
+            let distance_to_button = (
+                (position.x - BUTTON_X).powf(2.0) +
+                (position.y - BUTTON_Y).powf(2.0) +
+                (position.z - BUTTON_Z).powf(2.0)
+            ).sqrt();
+
+            if distance_to_button <= BUTTON_MIN_DIST {
+                println!("dist to button: {:?}", distance_to_button);
+                context.active = true;
+                state_changed = true;
+            }
         }
+    }
 
-        // query player
+    //query trampoline and button
+    if state_changed {
         let query = world.query::<(
-            &physics::RigidBodyHandle,
-            &mut player::State,
+            &mut Transform,
+            &State,
         )>();
 
-        for (rigid_body, _) in query {
-            let rigid_body_set = &mut physics_state.physics
-                .as_mut().expect("physics::State must be defined")
-                .rigid_body_set;
-
-            let body = rigid_body_set.get_mut(*rigid_body).unwrap();
-            let position = body.position().translation;
-
-            if context.active {
-                let distance_to_tramp = (
-                    (position.x - TRAMP_X).powf(2.0) +
-                    position.y.powf(2.0) +
-                    (position.z - TRAMP_Z).powf(2.0)
-                ).sqrt();
-
-                if (distance_to_tramp <= TRAMP_MIN_DIST) &&
-                    input.is_action_activated(Action::TurnRight) &&
-                    camera_active
-                {
-                    println!("dist to tramp: {:?}", distance_to_tramp);
-                    body.apply_impulse(vector![0.0, 150.0, 0.0], true);
-                    context.active = false;
-                    state_changed = true;
-                }
-            } else {
-                let distance_to_button = (
-                    (position.x - BUTTON_X).powf(2.0) +
-                    (position.y - BUTTON_Y).powf(2.0) +
-                    (position.z - BUTTON_Z).powf(2.0)
-                ).sqrt();
-
-                if distance_to_button <= BUTTON_MIN_DIST {
-                    println!("dist to button: {:?}", distance_to_button);
-                    context.active = true;
-                    state_changed = true;
-                }
-            }
-        }
-
-        //query trampoline and button
-        if state_changed {
-            let query = world.query::<(
-                &mut Transform,
-                &State,
-            )>();
-
-            for (transform, _) in query {
-                transform.rotate = transform.rotate *
-                    Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin());
-            }
+        for (transform, _) in query {
+            transform.rotate = transform.rotate *
+                Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin());
         }
     }
 }

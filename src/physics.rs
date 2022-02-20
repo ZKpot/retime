@@ -1,7 +1,9 @@
 pub use rapier3d::prelude::*;
 
 use dotrix::{
-    ecs::{ Mut, Context, },
+    World, Transform,
+    ecs::{ Mut, Context, Const, },
+    math::{ Quat, },
 };
 
 #[derive(Clone)]
@@ -101,4 +103,37 @@ pub fn step(
         integration_parameters,
         gravity,
     });
+}
+
+pub fn update_models(
+    world: Const<World>,
+    state: Const<State>,
+) {
+
+    let query = world.query::<(
+        &mut Transform, &RigidBodyHandle
+    )>();
+
+    for (transform, rigid_body) in query {
+        let rigid_body_set = &state.physics.as_ref()
+            .expect("physics::State must be defined")
+            .rigid_body_set;
+
+        let body = rigid_body_set.get(*rigid_body).unwrap();
+
+        let position = body.position().translation;
+        let rotation = body.position().rotation;
+
+        // update model transfrom
+        transform.translate.x = position.x;
+        transform.translate.y = position.y;
+        transform.translate.z = position.z;
+
+        transform.rotate = Quat::new(
+            rotation.into_inner().w,
+            rotation.into_inner().i,
+            rotation.into_inner().j,
+            rotation.into_inner().k,
+        );
+    }
 }
