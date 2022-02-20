@@ -73,31 +73,39 @@ pub fn update_stacks (
     let index = stack.index;
 
     // physics engine
-    if index == 0 {
-        stack.physics_state.push_front(physics_state.physics.clone());
-    } else {
-        stack.physics_state[index-1] = physics_state.physics.clone();
-    }
-
-    while stack.physics_state.len() > STACK_MAX_SIZE {
-        stack.physics_state.pop_back();
-    }
+    update_stack(
+        &mut stack.physics_state,
+        physics_state.physics.clone(),
+        index
+    );
 
     // player
     let query = world.query::<(&mut player::State,)>();
     for (state_player,) in query {
-        if index == 0 {
-            state_player.action_stack.push_front(state_player.current_action.take());
-        } else {
-            state_player.action_stack[index-1] = state_player.current_action.take();
-        }
-
-        while state_player.action_stack.len() > STACK_MAX_SIZE {
-            state_player.action_stack.pop_back();
-        }
+        update_stack(
+            &mut state_player.action_stack,
+            state_player.current_action.take(),
+            index
+        );
     }
 
     if input.is_action_activated(Action::RewindTime) {
         state_stack.push(states::RewindTime {});
+    }
+}
+
+fn update_stack<T> (
+    stack: &mut VecDeque<Option<T>>,
+    new_element: Option<T>,
+    index: usize,
+) {
+    if index == 0 {
+        stack.push_front(new_element);
+    } else {
+        stack[index-1] = new_element;
+    }
+
+    while stack.len() > STACK_MAX_SIZE {
+        stack.pop_back();
     }
 }
