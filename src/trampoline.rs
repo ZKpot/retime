@@ -26,14 +26,12 @@ const BUTTON_Z: f32 = -11.0;
 const BUTTON_MIN_DIST: f32 = 1.4;
 
 pub struct Context {
-    initialized: bool,
     active: bool,
 }
 
 impl Default for Context {
     fn default() -> Self {
         Self {
-            initialized: false,
             active: false,
         }
     }
@@ -56,7 +54,6 @@ pub fn startup(
 }
 
 pub fn spawn(
-    mut context: ecs::Context<Context>,
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut physics_state: Mut<physics::State>,
@@ -64,75 +61,72 @@ pub fn spawn(
     let texture = assets.register("trampoline::texture");
     let mesh_id = assets.register("trampoline::mesh");
 
-    if !context.initialized && assets.get(mesh_id).is_some() {
+    while !assets.get(mesh_id).is_some() {}
 
-        // spawn trampoline
-        world.spawn(Some((
-            Model::from(mesh_id),
-            Material {
-                texture,
-                ..Default::default()
-            },
-            Transform {
-                translate: Vec3::new(TRAMP_X, TRAMP_Y, TRAMP_Z),
-                rotate: Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin()),
-                ..Default::default()
-            },
-            Render::default(),
-            State::default(),
-            camera::Properties::default(),
-        )));
+    // spawn trampoline
+    world.spawn(Some((
+        Model::from(mesh_id),
+        Material {
+            texture,
+            ..Default::default()
+        },
+        Transform {
+            translate: Vec3::new(TRAMP_X, TRAMP_Y, TRAMP_Z),
+            rotate: Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin()),
+            ..Default::default()
+        },
+        Render::default(),
+        State::default(),
+        camera::Properties::default(),
+    )));
 
-        // add trampoline the collider set
-        let mesh = assets.get(mesh_id).unwrap();
+    // add trampoline the collider set
+    let mesh = assets.get(mesh_id).unwrap();
 
-        let mut indices  = Vec::new();
+    let mut indices  = Vec::new();
 
-        let vertices = mesh.vertices_as::<[f32; 3]>(0).collect::<Vec<_>>()
-            .iter().map(|elem| physics::nalgebra::Point3::new(
-                    elem[0],
-                    elem[1],
-                    elem[2],
-                )
-            ).collect();
+    let vertices = mesh.vertices_as::<[f32; 3]>(0).collect::<Vec<_>>()
+        .iter().map(|elem| physics::nalgebra::Point3::new(
+                elem[0],
+                elem[1],
+                elem[2],
+            )
+        ).collect();
 
-        let indices_mesh = mesh.indices().take()
-        .expect("trampoline mesh should contain indices");
+    let indices_mesh = mesh.indices().take()
+    .expect("trampoline mesh should contain indices");
 
-        for i in 0..indices_mesh.len()/3 {
-            indices.push([
-                indices_mesh[i*3],
-                indices_mesh[i*3+1],
-                indices_mesh[i*3+2],
-            ]);
-        }
-
-        let collider = physics::ColliderBuilder::trimesh(
-            vertices,
-            indices,
-        ).translation(vector![TRAMP_X, 0.0, TRAMP_Z]).build();
-
-        physics_state.physics.as_mut().expect("physics::State must be defined")
-            .collider_set.insert(collider);
-
-        // add activation button
-        world.spawn(Some((
-            Model::from(mesh_id),
-            Material {
-                texture,
-                ..Default::default()
-            },
-            Transform {
-                translate: Vec3::new(BUTTON_X, BUTTON_Y, BUTTON_Z),
-                rotate: Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin()),
-                scale: Vec3::new(0.4, 1.0, 0.4)
-            },
-            Render::default(),
-            State::default(),
-        )));
-
-        context.initialized = true;
+    for i in 0..indices_mesh.len()/3 {
+        indices.push([
+            indices_mesh[i*3],
+            indices_mesh[i*3+1],
+            indices_mesh[i*3+2],
+        ]);
     }
+
+    let collider = physics::ColliderBuilder::trimesh(
+        vertices,
+        indices,
+    ).translation(vector![TRAMP_X, 0.0, TRAMP_Z]).build();
+
+    physics_state.physics.as_mut().expect("physics::State must be defined")
+        .collider_set.insert(collider);
+
+    // add activation button
+    world.spawn(Some((
+        Model::from(mesh_id),
+        Material {
+            texture,
+            ..Default::default()
+        },
+        Transform {
+            translate: Vec3::new(BUTTON_X, BUTTON_Y, BUTTON_Z),
+            rotate: Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin()),
+            scale: Vec3::new(0.4, 1.0, 0.4)
+        },
+        Render::default(),
+        State::default(),
+    )));
 }
 
 pub fn control(

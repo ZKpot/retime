@@ -5,6 +5,7 @@ use dotrix::{
     pbr::{ self, Light, },
     ecs::{ Mut, },
     renderer::Render,
+    State as StateStack,
 };
 
 mod actions;
@@ -15,6 +16,7 @@ mod physics;
 mod terrain;
 mod time;
 mod trampoline;
+mod states;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -25,15 +27,37 @@ fn main() {
         .with(System::from(terrain::startup))
         .with(System::from(trampoline::startup))
 
-        .with(System::from(terrain::spawn))
-        .with(System::from(trampoline::spawn))
+        .with(
+            System::from(terrain::spawn).with(StateStack::on::<states::LevelInit>())
+        )
+        .with(
+            System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>())
+        )
+        .with(
+            System::from(player::spawn).with(StateStack::on::<states::LevelInit>())
+        )
+        .with(
+            System::from(states::exit_init).with(StateStack::on::<states::LevelInit>())
+        )
 
-        .with(System::from(time::rewind))
-        .with(System::from(player::control))
-        .with(System::from(trampoline::control))
-        .with(System::from(dotrix::camera::control))
-        .with(System::from(camera::control))
-        .with(System::from(time::update))
+        .with(
+            System::from(time::rewind).with(StateStack::on::<states::RunLevel>())
+        )
+        .with(
+            System::from(player::control).with(StateStack::on::<states::RunLevel>())
+        )
+        .with(
+            System::from(trampoline::control).with(StateStack::on::<states::RunLevel>())
+        )
+        .with(
+            System::from(dotrix::camera::control).with(StateStack::on::<states::RunLevel>())
+        )
+        .with(
+            System::from(camera::control).with(StateStack::on::<states::RunLevel>())
+        )
+        .with(
+            System::from(time::update).with(StateStack::on::<states::RunLevel>())
+        )
 
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
@@ -50,17 +74,13 @@ fn startup(
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut input: Mut<Input>,
-    mut physics_state: Mut<physics::State>,
+    mut state_stack: Mut<StateStack>,
 ) {
     init_light(&mut world);
     init_skybox(&mut world, &mut assets);
     actions::init_actions(&mut input);
 
-    player::spawn(
-        &mut world,
-        &mut assets,
-        &mut physics_state,
-    );
+    state_stack.push(states::LevelInit {});
 }
 
 fn init_light(world: &mut World) {

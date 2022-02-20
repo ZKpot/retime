@@ -53,9 +53,9 @@ pub fn startup(
 }
 
 pub fn spawn(
-    world: &mut World,
-    assets: &mut Assets,
-    physics_state: &mut physics::State,
+    mut world: Mut<World>,
+    mut assets: Mut<Assets>,
+    mut physics_state: Mut<physics::State>,
 ) {
     let state = physics_state.physics.as_mut().expect("physics::State must be defined");
 
