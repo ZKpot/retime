@@ -39,7 +39,10 @@ pub fn rewind (
     println!("{:?} {:?}", stack.index, stack.physics_state.len());
     physics_state.physics = stack.physics_state[stack.index-1].clone();
 
-    if input.is_action_deactivated(Action::RewindTime) || (stack.index >= stack.physics_state.len()) {
+    if input.is_action_deactivated(Action::RewindTime) ||
+        !input.is_action_hold(Action::RewindTime) ||
+        (stack.index >= stack.physics_state.len())
+    {
         state_stack.pop::<states::RewindTime>().expect("Expected RewindTime state");
     }
 }

@@ -27,6 +27,7 @@ fn main() {
         .with(System::from(terrain::startup))
         .with(System::from(trampoline::startup))
 
+        .with(System::from(settings::menu))
         .with(
             System::from(terrain::spawn).with(StateStack::on::<states::LevelInit>())
         )

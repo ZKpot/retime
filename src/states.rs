@@ -3,6 +3,8 @@ use dotrix::{
     ecs::{ Mut },
 };
 
+pub struct Pause {}
+
 pub struct LevelInit {}
 
 pub struct RunLevel {}
