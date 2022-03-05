@@ -59,16 +59,27 @@ pub fn draw(
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
+    let mut state_changed = false;
 
-    if input.is_action_activated(actions::Action::Pause) {
+    if input.is_action_activated(actions::Action::Pause) && !stats.level_passed {
         if paused {
             state_stack.pop_any();
         } else {
-            state_stack.push(states::Pause {});
+            state_stack.push(states::Pause::default());
         }
 
         paused = !paused;
+        state_changed = true;
+    }
 
+    if let Some(pause_state) = state_stack.get_mut::<states::Pause>() {
+        if !pause_state.handled{
+            pause_state.handled = true;
+            state_changed = true;
+        }
+    }
+
+    if state_changed {
         if let Err(e) = window.set_cursor_grab(!paused) {
             println!("Cannot grab cursor! {}", e);
         }
@@ -80,8 +91,14 @@ pub fn draw(
         .expect("Renderer does not contain an Overlay instance");
 
     // pause menu
+    let label = if stats.level_passed {
+        format!("Level passed in {:04.1} secs", stats.time)
+    } else {
+        "Pause".to_string()
+    };
+
     if paused {
-        egui::containers::Window::new("Pause")
+        egui::containers::Window::new(label)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
             .collapsible(false)
             .resizable(false)
@@ -89,8 +106,10 @@ pub fn draw(
             .show(&egui.ctx, |ui| {
                 ui.vertical_centered_justified(|ui| {
 
-                    if ui.button("Resume").clicked() {
-                        state_stack.pop_any();
+                    if !stats.level_passed {
+                        if ui.button("Resume").clicked() {
+                            state_stack.pop_any();
+                        }
                     }
 
                     if settings.show_info_panel == true {
