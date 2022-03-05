@@ -10,6 +10,7 @@ use dotrix::egui::{
 
 use crate::states;
 use crate::actions;
+use crate::time;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum WindowMode {
@@ -54,6 +55,7 @@ pub fn draw(
     mut window: Mut<Window>,
     frame: Const<Frame>,
     stats: Const<states::Stats>,
+    time_stack: Const<time::Stack>,
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
@@ -134,19 +136,33 @@ pub fn draw(
         ..Default::default()
     };
 
-    egui::containers::Window::new("Score")
+    let time_bar = (time::STACK_MAX_SIZE - time_stack.index) as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    let time_bar_width = 20.0 + 140.0 * time_stack.physics_state.len() as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    egui::containers::Window::new("game_bar")
         .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, 0.0))
         .frame(game_frame)
         .resizable(false)
         .title_bar(false)
-        .default_width(40.0)
         .show(&egui.ctx, |ui| {
-            ui.vertical_centered_justified(|ui| {
-                ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
-                    .color(egui::Color32::GRAY)
-                    .heading()
-                ));
-            })
+            egui::Grid::new("score")
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.set_min_width(170.0);
+                        ui.add(
+                            egui::widgets::ProgressBar::new(time_bar)
+                                .desired_width(time_bar_width)
+                        );
+                    });
+
+                    ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
+                        .color(egui::Color32::GRAY)
+                        .heading()
+                    ));
+                });
         });
 
     // info panel
