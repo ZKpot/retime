@@ -53,6 +53,7 @@ pub fn draw(
     mut state_stack: Mut<StateStack>,
     mut window: Mut<Window>,
     frame: Const<Frame>,
+    stats: Const<states::Stats>,
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
@@ -72,11 +73,12 @@ pub fn draw(
         window.set_cursor_visible(paused);
     }
 
+
+    let egui = overlay.get::<Egui>()
+        .expect("Renderer does not contain an Overlay instance");
+
     // pause menu
     if paused {
-        let egui = overlay.get::<Egui>()
-            .expect("Renderer does not contain an Overlay instance");
-
         egui::containers::Window::new("Pause")
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
             .collapsible(false)
@@ -124,10 +126,33 @@ pub fn draw(
             });
     }
 
+    // game panel
+    let game_frame = egui::containers::Frame{
+        fill: egui::Color32::from_black_alpha(192),
+        corner_radius: 2.5,
+        margin: egui::Vec2::new(4.0, 4.0),
+        ..Default::default()
+    };
+
+    egui::containers::Window::new("Score")
+        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, 0.0))
+        .frame(game_frame)
+        .resizable(false)
+        .title_bar(false)
+        .default_width(40.0)
+        .show(&egui.ctx, |ui| {
+            ui.vertical_centered_justified(|ui| {
+                ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
+                    .color(egui::Color32::GRAY)
+                    .heading()
+                ));
+            })
+        });
+
     // info panel
     if settings.show_info_panel {
 
-        let info_ui_frame = egui::containers::Frame{
+        let info_frame = egui::containers::Frame{
             fill: egui::Color32::from_black_alpha(192),
             corner_radius: 2.5,
             margin: egui::Vec2::new(4.0, 4.0),
@@ -140,7 +165,7 @@ pub fn draw(
         if settings.show_info_panel {
             egui::SidePanel::left("info_panel")
                 .resizable(false)
-                .frame(info_ui_frame)
+                .frame(info_frame)
                 .show(&egui.ctx, |ui| {
                     egui::Grid::new("info_grid").show(ui, |ui| {
                         let color = if paused {

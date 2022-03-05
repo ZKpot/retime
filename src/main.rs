@@ -65,6 +65,11 @@ fn main() {
             System::from(time::update_stacks)
                 .with(StateStack::on::<states::RunLevel>())
         )
+        .with(
+            System::from(states::update)
+                .with(StateStack::on::<states::RunLevel>())
+                .with(StateStack::on::<states::RewindTime>())
+        )
 
         .with(System::from(physics::update_models))
         .with(System::from(physics::step).with(StateStack::on::<states::RunLevel>()))
@@ -83,6 +88,7 @@ fn main() {
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
         .with(Service::from(ui::State::default()))
+        .with(Service::from(states::Stats::default()))
 
         .with(pbr::extension)
         .with(skybox::extension)
