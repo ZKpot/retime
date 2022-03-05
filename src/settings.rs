@@ -32,10 +32,14 @@ impl Default for State {
 }
 
 pub fn startup(
-    mut window: Mut<Window>,
+    window: Const<Window>,
 ) {
     window.set_inner_size(Vec2u::new(1280, 720));
+}
 
+pub fn init(
+    mut window: Mut<Window>,
+) {
     if let Err(e) = window.set_cursor_grab(true) {
         println!("Cannot grab cursor! {}", e);
     }
@@ -108,8 +112,7 @@ pub fn menu(
                     }
 
                     if ui.button("Reset level").clicked() {
-                        //state_stack.clear();
-                        //state_stack.push(states::LevelInit {});
+                        state_stack.push(states::LevelInit {});
                     }
 
                     ui.add_space(25.0);

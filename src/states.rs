@@ -11,7 +11,7 @@ pub struct RunLevel {}
 
 pub struct RewindTime {}
 
-pub fn exit_init(
+pub fn after_init(
     mut state: Mut<State>,
 ) {
     state.clear();

@@ -8,7 +8,7 @@ resolver = "2"
 
 [dependencies.dotrix]
 git = "https://github.com/lowenware/dotrix"
-rev = "fe8554a99c25ca32b8edd8d017ae93e8330039ad"
+rev = "2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
 
 [dependencies.rapier3d]
 version = "0.11.1"
