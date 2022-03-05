@@ -1,5 +1,5 @@
 use dotrix::ecs::{ Mut, Const, };
-use dotrix::{ Window, Input, State as StateStack, };
+use dotrix::{ Window, Input, State as StateStack, Frame, };
 use dotrix::overlay::Overlay;
 use dotrix::window::Fullscreen;
 use dotrix::math::{ Vec2u, };
@@ -25,7 +25,7 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         Self {
-            show_info_panel: true,
+            show_info_panel: false,
             window_mode: WindowMode::Windowed,
         }
     }
@@ -48,6 +48,7 @@ pub fn menu(
     mut settings: Mut<State>,
     mut state_stack: Mut<StateStack>,
     mut window: Mut<Window>,
+    frame: Const<Frame>,
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
@@ -118,5 +119,49 @@ pub fn menu(
                     }
                 })
             });
+    }
+
+    // info panel
+    if settings.show_info_panel {
+
+        let info_ui_frame = egui::containers::Frame{
+            fill: egui::Color32::from_black_alpha(192),
+            corner_radius: 2.5,
+            margin: egui::Vec2::new(4.0, 4.0),
+            ..Default::default()
+        };
+
+        let egui = overlay.get::<Egui>()
+            .expect("Renderer does not contain an Overlay instance");
+
+        if settings.show_info_panel {
+            egui::SidePanel::left("info_panel")
+                .resizable(false)
+                .frame(info_ui_frame)
+                .show(&egui.ctx, |ui| {
+                    egui::Grid::new("info_grid").show(ui, |ui| {
+                        let color = if paused {
+                            egui::Color32::LIGHT_GRAY
+                        } else {
+                            egui::Color32::GRAY
+                        };
+                        ui.add(egui::Label::new(
+                            egui::RichText::new("FPS").color(color)
+                        ));
+                        ui.add(egui::Label::new(
+                            egui::RichText::new(format!("{:05.1}", frame.fps()))
+                                .color(color)
+                        ));
+                        ui.end_row();
+
+                        let states_stack_dump = state_stack.dump().join(",\n  ");
+                        ui.add(egui::Label::new(
+                            egui::RichText::new(
+                                format!("Current state stack: \n  {}\n", states_stack_dump)
+                            ).color(color)
+                        ));
+                    });
+                });
+        }
     }
 }
