@@ -46,7 +46,7 @@ pub fn init(
     window.set_cursor_visible(false);
 }
 
-pub fn menu(
+pub fn draw(
     input: Const<Input>,
     overlay: Const<Overlay>,
     mut settings: Mut<State>,

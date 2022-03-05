@@ -11,7 +11,7 @@ use dotrix::{
 
 mod actions;
 mod player;
-mod settings;
+mod ui;
 mod camera;
 mod physics;
 mod terrain;
@@ -21,19 +21,19 @@ mod states;
 
 fn main() {
     Dotrix::application("ReTime")
-        .with(System::from(settings::startup))
+        .with(System::from(ui::startup))
         .with(System::from(startup))
         .with(System::from(player::startup))
         .with(System::from(camera::startup))
         .with(System::from(terrain::startup))
         .with(System::from(trampoline::startup))
 
-        .with(System::from(settings::menu))
+        .with(System::from(ui::draw))
         .with(
             System::from(before_init).with(StateStack::on::<states::LevelInit>())
         )
         .with(
-            System::from(settings::init).with(StateStack::on::<states::LevelInit>())
+            System::from(ui::init).with(StateStack::on::<states::LevelInit>())
         )
         .with(
             System::from(terrain::spawn).with(StateStack::on::<states::LevelInit>())
@@ -82,7 +82,7 @@ fn main() {
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
-        .with(Service::from(settings::State::default()))
+        .with(Service::from(ui::State::default()))
 
         .with(pbr::extension)
         .with(skybox::extension)
