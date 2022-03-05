@@ -4,6 +4,7 @@ use dotrix::{
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    egui, overlay,
     renderer::Render,
     State as StateStack,
 };
@@ -75,9 +76,12 @@ fn main() {
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
+        .with(Service::from(settings::State::default()))
 
         .with(pbr::extension)
         .with(skybox::extension)
+        .with(overlay::extension)
+        .with(egui::extension)
 
         .run();
 }
