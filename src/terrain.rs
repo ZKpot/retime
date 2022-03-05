@@ -1,22 +1,10 @@
 use dotrix::{
     Assets, World,
     pbr,
-    ecs::{ self, Mut, },
+    ecs::{ Mut, },
 };
 
 use crate::physics;
-
-pub struct Context {
-    initialized: bool,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        Self {
-            initialized: false,
-        }
-    }
-}
 
 pub fn startup(
     mut assets: Mut<Assets>,
@@ -25,7 +13,6 @@ pub fn startup(
 }
 
 pub fn spawn (
-    mut context: ecs::Context<Context>,
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut physics_state: Mut<physics::State>,
@@ -33,48 +20,46 @@ pub fn spawn (
     let texture = assets.register("terrain::texture");
     let mesh_id = assets.register("terrain::mesh");
 
-    if !context.initialized && assets.get(mesh_id).is_some() {
-        world.spawn(
-            (pbr::solid::Entity {
-                mesh: mesh_id,
-                texture,
-                ..Default::default()
-            }).some()
-        );
+    while !assets.get(mesh_id).is_some() {}
 
-        // add the terrain to the collider set
-        let mesh = assets.get(mesh_id).unwrap();
+    world.spawn(
+        (pbr::solid::Entity {
+            mesh: mesh_id,
+            texture,
+            ..Default::default()
+        }).some()
+    );
 
-        let mut indices  = Vec::new();
+    // add the terrain to the collider set
+    let mesh = assets.get(mesh_id).unwrap();
 
-        let vertices = mesh.vertices_as::<[f32; 3]>(0)
-            .collect::<Vec<_>>().iter()
-            .map(|elem| physics::nalgebra::Point3::new(
-                    elem[0],
-                    elem[1],
-                    elem[2],
-                )
-            ).collect();
+    let mut indices  = Vec::new();
 
-        let indices_mesh = mesh.indices().take()
-            .expect("terrain mesh should contain indices");
+    let vertices = mesh.vertices_as::<[f32; 3]>(0)
+        .collect::<Vec<_>>().iter()
+        .map(|elem| physics::nalgebra::Point3::new(
+                elem[0],
+                elem[1],
+                elem[2],
+            )
+        ).collect();
 
-        for i in 0..indices_mesh.len()/3 {
-            indices.push([
-                indices_mesh[i*3],
-                indices_mesh[i*3+1],
-                indices_mesh[i*3+2],
-            ]);
-        }
+    let indices_mesh = mesh.indices().take()
+        .expect("terrain mesh should contain indices");
 
-        let collider = physics::ColliderBuilder::trimesh(
-            vertices,
-            indices,
-        ).build();
-
-        physics_state.physics.as_mut().expect("physics::State must be defined")
-            .collider_set.insert(collider);
-
-        context.initialized = true;
+    for i in 0..indices_mesh.len()/3 {
+        indices.push([
+            indices_mesh[i*3],
+            indices_mesh[i*3+1],
+            indices_mesh[i*3+2],
+        ]);
     }
+
+    let collider = physics::ColliderBuilder::trimesh(
+        vertices,
+        indices,
+    ).build();
+
+    physics_state.physics.as_mut().expect("physics::State must be defined")
+        .collider_set.insert(collider);
 }
