@@ -10,6 +10,7 @@ use dotrix::egui::{
 
 use crate::states;
 use crate::actions;
+use crate::time;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum WindowMode {
@@ -46,38 +47,58 @@ pub fn init(
     window.set_cursor_visible(false);
 }
 
-pub fn menu(
+pub fn draw(
     input: Const<Input>,
     overlay: Const<Overlay>,
     mut settings: Mut<State>,
     mut state_stack: Mut<StateStack>,
     mut window: Mut<Window>,
     frame: Const<Frame>,
+    stats: Const<states::Stats>,
+    time_stack: Const<time::Stack>,
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
+    let mut state_changed = false;
 
-    if input.is_action_activated(actions::Action::Pause) {
+    if input.is_action_activated(actions::Action::Pause) && !stats.level_passed {
         if paused {
             state_stack.pop_any();
         } else {
-            state_stack.push(states::Pause {});
+            state_stack.push(states::Pause::default());
         }
 
         paused = !paused;
+        state_changed = true;
+    }
 
+    if let Some(pause_state) = state_stack.get_mut::<states::Pause>() {
+        if !pause_state.handled{
+            pause_state.handled = true;
+            state_changed = true;
+        }
+    }
+
+    if state_changed {
         if let Err(e) = window.set_cursor_grab(!paused) {
             println!("Cannot grab cursor! {}", e);
         }
         window.set_cursor_visible(paused);
     }
 
-    // pause menu
-    if paused {
-        let egui = overlay.get::<Egui>()
-            .expect("Renderer does not contain an Overlay instance");
 
-        egui::containers::Window::new("Pause")
+    let egui = overlay.get::<Egui>()
+        .expect("Renderer does not contain an Overlay instance");
+
+    // pause menu
+    let label = if stats.level_passed {
+        format!("Level passed in {:04.1} secs", stats.time)
+    } else {
+        "Pause".to_string()
+    };
+
+    if paused {
+        egui::containers::Window::new(label)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 0.0))
             .collapsible(false)
             .resizable(false)
@@ -85,8 +106,10 @@ pub fn menu(
             .show(&egui.ctx, |ui| {
                 ui.vertical_centered_justified(|ui| {
 
-                    if ui.button("Resume").clicked() {
-                        state_stack.pop_any();
+                    if !stats.level_passed {
+                        if ui.button("Resume").clicked() {
+                            state_stack.pop_any();
+                        }
                     }
 
                     if settings.show_info_panel == true {
@@ -124,10 +147,47 @@ pub fn menu(
             });
     }
 
+    // game panel
+    let game_frame = egui::containers::Frame{
+        fill: egui::Color32::from_black_alpha(192),
+        corner_radius: 2.5,
+        margin: egui::Vec2::new(4.0, 4.0),
+        ..Default::default()
+    };
+
+    let time_bar = (time::STACK_MAX_SIZE - time_stack.index) as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    let time_bar_width = 20.0 + 140.0 * time_stack.physics_state.len() as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    egui::containers::Window::new("game_bar")
+        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, 0.0))
+        .frame(game_frame)
+        .resizable(false)
+        .title_bar(false)
+        .show(&egui.ctx, |ui| {
+            egui::Grid::new("score")
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.set_min_width(170.0);
+                        ui.add(
+                            egui::widgets::ProgressBar::new(time_bar)
+                                .desired_width(time_bar_width)
+                        );
+                    });
+
+                    ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
+                        .color(egui::Color32::GRAY)
+                        .heading()
+                    ));
+                });
+        });
+
     // info panel
     if settings.show_info_panel {
 
-        let info_ui_frame = egui::containers::Frame{
+        let info_frame = egui::containers::Frame{
             fill: egui::Color32::from_black_alpha(192),
             corner_radius: 2.5,
             margin: egui::Vec2::new(4.0, 4.0),
@@ -140,7 +200,7 @@ pub fn menu(
         if settings.show_info_panel {
             egui::SidePanel::left("info_panel")
                 .resizable(false)
-                .frame(info_ui_frame)
+                .frame(info_frame)
                 .show(&egui.ctx, |ui| {
                     egui::Grid::new("info_grid").show(ui, |ui| {
                         let color = if paused {

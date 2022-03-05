@@ -12,10 +12,10 @@ use crate::states;
 
 use std::collections::VecDeque;
 
-const STACK_MAX_SIZE: usize = 900;
+pub const STACK_MAX_SIZE: usize = 900;
 
 pub struct Stack {
-    physics_state: VecDeque<Option<physics::PhysicsState>>,
+    pub physics_state: VecDeque<Option<physics::PhysicsState>>,
     pub index: usize,
 }
 
