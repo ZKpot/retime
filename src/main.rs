@@ -4,6 +4,7 @@ use dotrix::{
     sky::{ skybox, SkyBox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    egui, overlay,
     renderer::Render,
     State as StateStack,
 };
@@ -29,6 +30,12 @@ fn main() {
 
         .with(System::from(settings::menu))
         .with(
+            System::from(before_init).with(StateStack::on::<states::LevelInit>())
+        )
+        .with(
+            System::from(settings::init).with(StateStack::on::<states::LevelInit>())
+        )
+        .with(
             System::from(terrain::spawn).with(StateStack::on::<states::LevelInit>())
         )
         .with(
@@ -38,7 +45,7 @@ fn main() {
             System::from(player::spawn).with(StateStack::on::<states::LevelInit>())
         )
         .with(
-            System::from(states::exit_init).with(StateStack::on::<states::LevelInit>())
+            System::from(states::after_init).with(StateStack::on::<states::LevelInit>())
         )
 
         .with(
@@ -75,24 +82,45 @@ fn main() {
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
+        .with(Service::from(settings::State::default()))
 
         .with(pbr::extension)
         .with(skybox::extension)
+        .with(overlay::extension)
+        .with(egui::extension)
 
         .run();
 }
 
 fn startup(
-    mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut input: Mut<Input>,
     mut state_stack: Mut<StateStack>,
 ) {
-    init_light(&mut world);
-    init_skybox(&mut world, &mut assets);
+    assets.import("assets/skybox/skybox_right.png");
+    assets.import("assets/skybox/skybox_left.png");
+    assets.import("assets/skybox/skybox_top.png");
+    assets.import("assets/skybox/skybox_bottom.png");
+    assets.import("assets/skybox/skybox_front.png");
+    assets.import("assets/skybox/skybox_back.png");
+
     actions::init_actions(&mut input);
 
     state_stack.push(states::LevelInit {});
+}
+
+fn before_init(
+    mut world: Mut<World>,
+    mut physics_state: Mut<physics::State>,
+    mut time_stack: Mut<time::Stack>,
+    mut assets: Mut<Assets>,
+) {
+    world.reset();
+    *physics_state = physics::State::default();
+    *time_stack = time::Stack::default();
+
+    init_light(&mut world);
+    init_skybox(&mut world, &mut assets);
 }
 
 fn init_light(world: &mut World) {
@@ -110,13 +138,6 @@ fn init_skybox(
     world: &mut World,
     assets: &mut Assets,
 ) {
-    assets.import("assets/skybox/skybox_right.png");
-    assets.import("assets/skybox/skybox_left.png");
-    assets.import("assets/skybox/skybox_top.png");
-    assets.import("assets/skybox/skybox_bottom.png");
-    assets.import("assets/skybox/skybox_front.png");
-    assets.import("assets/skybox/skybox_back.png");
-
     world.spawn(Some((
         SkyBox {
             view_range: 500.0,
