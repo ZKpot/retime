@@ -50,6 +50,7 @@ pub fn startup(
     mut assets: Mut<Assets>,
 ) {
     assets.import("assets/trampoline.gltf");
+    assets.import("assets/trampoline.png");
 }
 
 pub fn spawn(

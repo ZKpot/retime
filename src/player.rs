@@ -58,6 +58,7 @@ pub fn startup(
     mut assets: Mut<Assets>,
 ) {
     assets.import("assets/player.gltf");
+    assets.import("assets/player.png");
 }
 
 pub fn spawn(

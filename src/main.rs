@@ -28,7 +28,9 @@ fn main() {
         .with(System::from(terrain::startup))
         .with(System::from(trampoline::startup))
 
-        .with(System::from(ui::draw))
+        .with(System::from(ui::draw_panel))
+        .with(System::from(ui::draw_menu))
+
         .with(
             System::from(before_init).with(StateStack::on::<states::LevelInit>())
         )

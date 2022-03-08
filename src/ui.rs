@@ -1,5 +1,5 @@
 use dotrix::ecs::{ Mut, Const, };
-use dotrix::{ Window, Input, State as StateStack, Frame, };
+use dotrix::{ Window, Input, State as StateStack, Frame, Assets, };
 use dotrix::overlay::Overlay;
 use dotrix::window::Fullscreen;
 use dotrix::math::{ Vec2u, };
@@ -47,7 +47,7 @@ pub fn init(
     window.set_cursor_visible(false);
 }
 
-pub fn draw(
+pub fn draw_menu(
     input: Const<Input>,
     overlay: Const<Overlay>,
     mut settings: Mut<State>,
@@ -55,7 +55,6 @@ pub fn draw(
     mut window: Mut<Window>,
     frame: Const<Frame>,
     stats: Const<states::Stats>,
-    time_stack: Const<time::Stack>,
 ) {
     // toggle pause
     let mut paused = state_stack.get::<states::Pause>().is_some();
@@ -147,43 +146,6 @@ pub fn draw(
             });
     }
 
-    // game panel
-    let game_frame = egui::containers::Frame{
-        fill: egui::Color32::from_black_alpha(192),
-        corner_radius: 2.5,
-        margin: egui::Vec2::new(4.0, 4.0),
-        ..Default::default()
-    };
-
-    let time_bar = (time::STACK_MAX_SIZE - time_stack.index) as f32 /
-        time::STACK_MAX_SIZE as f32;
-
-    let time_bar_width = 20.0 + 140.0 * time_stack.physics_state.len() as f32 /
-        time::STACK_MAX_SIZE as f32;
-
-    egui::containers::Window::new("game_bar")
-        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, 0.0))
-        .frame(game_frame)
-        .resizable(false)
-        .title_bar(false)
-        .show(&egui.ctx, |ui| {
-            egui::Grid::new("score")
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.set_min_width(170.0);
-                        ui.add(
-                            egui::widgets::ProgressBar::new(time_bar)
-                                .desired_width(time_bar_width)
-                        );
-                    });
-
-                    ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
-                        .color(egui::Color32::GRAY)
-                        .heading()
-                    ));
-                });
-        });
-
     // info panel
     if settings.show_info_panel {
 
@@ -227,4 +189,89 @@ pub fn draw(
                 });
         }
     }
+}
+
+pub fn draw_panel(
+    overlay: Const<Overlay>,
+    stats: Const<states::Stats>,
+    time_stack: Const<time::Stack>,
+    mut assets: Mut<Assets>,
+) {
+    let egui = overlay.get::<Egui>()
+        .expect("Renderer does not contain an Overlay instance");
+
+    // time bar and score
+    let offset = 10.0;
+
+    let game_frame = egui::containers::Frame{
+        fill: egui::Color32::from_black_alpha(192),
+        corner_radius: 2.5,
+        margin: egui::Vec2::new(4.0, 4.0),
+        ..Default::default()
+    };
+
+    let time_bar = (time::STACK_MAX_SIZE - time_stack.index) as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    let time_bar_width = 20.0 + 140.0 * time_stack.physics_state.len() as f32 /
+        time::STACK_MAX_SIZE as f32;
+
+    egui::containers::Window::new("game_bar")
+        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, offset))
+        .frame(game_frame)
+        .resizable(false)
+        .title_bar(false)
+        .show(&egui.ctx, |ui| {
+            egui::Grid::new("score")
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.set_min_width(170.0);
+                        ui.add(
+                            egui::widgets::ProgressBar::new(time_bar)
+                                .desired_width(time_bar_width)
+                        );
+                    });
+
+                    ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
+                        .color(egui::Color32::GRAY)
+                        .heading()
+                    ));
+                });
+        });
+
+    // actionable objects panel
+    let image_size = 60.0;
+
+    egui::containers::Window::new("items_menu")
+        .anchor(egui::Align2::RIGHT_BOTTOM, egui::Vec2::new(-offset, -offset))
+        .frame(game_frame)
+        .resizable(false)
+        .title_bar(false)
+        .show(&egui.ctx, |ui| {
+            egui::Grid::new("grid")
+                .show(ui, |ui| {
+
+                    ui.add(
+                        egui::Image::new(
+                            egui::TextureId::User(
+                                assets.register::<dotrix::assets::Texture>("player")
+                                    .as_u64().expect("Expected id as u64")
+                            ),
+                            egui::Vec2::new(image_size, image_size)
+                        ).tint(egui::Color32::from_white_alpha(255))
+                            .bg_fill(egui::Color32::DARK_GRAY)
+                    );
+
+                    ui.add(
+                        egui::Image::new(
+                            egui::TextureId::User(
+                                assets.register::<dotrix::assets::Texture>("trampoline")
+                                    .as_u64().expect("Expected id as u64")
+                            ),
+                            egui::Vec2::new(image_size, image_size)
+                        ).tint(egui::Color32::from_white_alpha(32))
+                            .bg_fill(egui::Color32::TRANSPARENT)
+                    );
+                });
+        });
 }
