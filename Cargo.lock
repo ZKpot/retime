@@ -543,7 +543,7 @@ dependencies = [
 [[package]]
 name = "dotrix"
 version = "0.5.3"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "dotrix_core",
  "dotrix_egui",
@@ -558,7 +558,7 @@ dependencies = [
 [[package]]
 name = "dotrix_core"
 version = "0.5.4"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "base64 0.13.0",
  "bytemuck",
@@ -577,7 +577,7 @@ dependencies = [
 [[package]]
 name = "dotrix_egui"
 version = "0.5.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "dotrix_core",
  "dotrix_overlay",
@@ -587,7 +587,7 @@ dependencies = [
 [[package]]
 name = "dotrix_math"
 version = "0.4.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "cgmath",
 ]
@@ -595,7 +595,7 @@ dependencies = [
 [[package]]
 name = "dotrix_overlay"
 version = "0.1.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "bytemuck",
  "dotrix_core",
@@ -605,7 +605,7 @@ dependencies = [
 [[package]]
 name = "dotrix_pbr"
 version = "0.2.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "bytemuck",
  "dotrix_core",
@@ -615,7 +615,7 @@ dependencies = [
 [[package]]
 name = "dotrix_primitives"
 version = "0.1.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "dotrix_core",
 ]
@@ -623,7 +623,7 @@ dependencies = [
 [[package]]
 name = "dotrix_sky"
 version = "0.1.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "bytemuck",
  "dotrix_core",
@@ -633,7 +633,7 @@ dependencies = [
 [[package]]
 name = "dotrix_terrain"
 version = "0.5.0"
-source = "git+https://github.com/lowenware/dotrix?rev=2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1#2b67d1c927c03dc6c36d89f357d90eeaf5b48ba1"
+source = "git+https://github.com/lowenware/dotrix?rev=5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e#5832d64846e24ee7fc5b264f78e4da6a9b3f5f4e"
 dependencies = [
  "bytemuck",
  "dotrix_core",
