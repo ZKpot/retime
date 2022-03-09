@@ -1,5 +1,5 @@
 use dotrix::ecs::{ Mut, Const, };
-use dotrix::{ Window, Input, State as StateStack, Frame, Assets, };
+use dotrix::{ Window, Input, State as StateStack, Frame, Assets, World, };
 use dotrix::overlay::Overlay;
 use dotrix::window::Fullscreen;
 use dotrix::math::{ Vec2u, };
@@ -192,6 +192,7 @@ pub fn draw_menu(
 }
 
 pub fn draw_panel(
+    world: Const<World>,
     overlay: Const<Overlay>,
     stats: Const<states::Stats>,
     time_stack: Const<time::Stack>,
@@ -251,27 +252,35 @@ pub fn draw_panel(
             egui::Grid::new("grid")
                 .show(ui, |ui| {
 
-                    ui.add(
-                        egui::Image::new(
-                            egui::TextureId::User(
-                                assets.register::<dotrix::assets::Texture>("player")
-                                    .as_u64().expect("Expected id as u64")
-                            ),
-                            egui::Vec2::new(image_size, image_size)
-                        ).tint(egui::Color32::from_white_alpha(255))
-                            .bg_fill(egui::Color32::DARK_GRAY)
-                    );
+                    // query player
+                    let query = world.query::<(&mut time::ActionableObject,)>();
 
-                    ui.add(
-                        egui::Image::new(
-                            egui::TextureId::User(
-                                assets.register::<dotrix::assets::Texture>("trampoline")
-                                    .as_u64().expect("Expected id as u64")
-                            ),
-                            egui::Vec2::new(image_size, image_size)
-                        ).tint(egui::Color32::from_white_alpha(32))
-                            .bg_fill(egui::Color32::TRANSPARENT)
-                    );
+                    for (object,) in query {
+
+                        let bg_color = if object.selected {
+                            egui::Color32::DARK_GRAY
+                        } else {
+                            egui::Color32::TRANSPARENT
+                        };
+
+                        let alpha = if object.active {
+                            255
+                        } else {
+                            32
+                        };
+
+                        ui.add(
+                            egui::Image::new(
+                                egui::TextureId::User(
+                                    assets.register::<dotrix::assets::Texture>
+                                        (object.tile_texture_name)
+                                        .as_u64().expect("Expected id as u64")
+                                ),
+                                egui::Vec2::new(image_size, image_size)
+                            ).tint(egui::Color32::from_white_alpha(alpha))
+                                .bg_fill(bg_color)
+                        );
+                    }
                 });
         });
 }
