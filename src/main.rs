@@ -1,11 +1,11 @@
 use dotrix::{
     prelude::*,
-    Assets, CubeMap, Color, World, Input,
-    sky::{ skybox, SkyBox, },
+    Color, World, Input,
+    sky::{ skybox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    math::Vec3,
     egui, overlay,
-    renderer::Render,
     State as StateStack,
 };
 
@@ -101,17 +101,9 @@ fn main() {
 }
 
 fn startup(
-    mut assets: Mut<Assets>,
     mut input: Mut<Input>,
     mut state_stack: Mut<StateStack>,
 ) {
-    assets.import("assets/skybox/skybox_right.png");
-    assets.import("assets/skybox/skybox_left.png");
-    assets.import("assets/skybox/skybox_top.png");
-    assets.import("assets/skybox/skybox_bottom.png");
-    assets.import("assets/skybox/skybox_front.png");
-    assets.import("assets/skybox/skybox_back.png");
-
     actions::init_actions(&mut input);
 
     state_stack.push(states::LevelInit {});
@@ -121,45 +113,27 @@ fn before_init(
     mut world: Mut<World>,
     mut physics_state: Mut<physics::State>,
     mut time_stack: Mut<time::Stack>,
-    mut assets: Mut<Assets>,
 ) {
     world.reset();
     *physics_state = physics::State::default();
     *time_stack = time::Stack::default();
 
     init_light(&mut world);
-    init_skybox(&mut world, &mut assets);
 }
 
 fn init_light(world: &mut World) {
+    world.spawn(Some((Light::Simple {
+        position: Vec3::new(0.0, 100.0, 0.0),
+        color: Color::white(),
+        intensity: 0.6,
+        enabled: true,
+    },)));
     world.spawn(
         Some((
             Light::Ambient {
                 color: Color::white(),
-                intensity: 0.5,
+                intensity: 0.4,
             },
         ))
     );
-}
-
-fn init_skybox(
-    world: &mut World,
-    assets: &mut Assets,
-) {
-    world.spawn(Some((
-        SkyBox {
-            view_range: 500.0,
-            ..Default::default()
-        },
-        CubeMap {
-            right: assets.register("skybox_right"),
-            left: assets.register("skybox_left"),
-            top: assets.register("skybox_top"),
-            bottom: assets.register("skybox_bottom"),
-            back: assets.register("skybox_back"),
-            front: assets.register("skybox_front"),
-            ..Default::default()
-        },
-        Render::default(),
-    )));
 }

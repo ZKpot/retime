@@ -64,7 +64,7 @@ pub fn update (
     )>();
 
     for (transform, _) in query {
-        if transform.translate.x > 210.0 {
+        if transform.translate.x > 310.0 {
             stats.level_passed = true;
             state.push(Pause::default());
         }
