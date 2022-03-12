@@ -17,12 +17,12 @@ use crate::time;
 const TRAMP_X: f32 = 72.0;
 const TRAMP_Y: f32 = 0.01;
 const TRAMP_Z: f32 = -11.0;
-const TRAMP_MIN_DIST: f32 = 1.4;
+const TRAMP_MIN_DIST: f32 = 1.75;
 
 const BUTTON_X: f32 = 174.15;
 const BUTTON_Y: f32 = -20.0;
 const BUTTON_Z: f32 = -11.0;
-const BUTTON_MIN_DIST: f32 = 1.4;
+const BUTTON_MIN_DIST: f32 = 1.5;
 
 pub struct State {
 }
