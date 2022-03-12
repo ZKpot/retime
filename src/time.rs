@@ -28,6 +28,13 @@ impl Default for Stack {
     }
 }
 
+pub struct ActionableObject {
+    pub active: bool,
+    pub selected: bool,
+    pub is_player: &'static bool,
+    pub tile_texture_name: &'static str,
+}
+
 pub fn rewind (
     mut stack: Mut<Stack>,
     mut physics_state: Mut<physics::State>,

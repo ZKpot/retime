@@ -8,26 +8,14 @@ use dotrix::{
 
 use crate::player;
 use crate::actions::Action;
+use crate::time;
 
 const CAMERA_SPD: f32 = 0.05; // < 1
 const DY: f32 = 8.0;
 const DZ: f32 = -12.0;
 
-pub struct Properties {
-    pub active: bool,
-}
-
-impl Default for Properties {
-    fn default() -> Self {
-        Self {
-            active: false,
-        }
-    }
-}
-
 pub struct State {
     control_active: bool,
-    pub index: usize,
     position: Option<Vec3>,
     distance: Option<f32>,
     tilt: Option<f32>
@@ -37,7 +25,6 @@ impl Default for State {
     fn default() -> Self {
         Self {
             control_active: false,
-            index: 0,
             position: None,
             distance: None,
             tilt: None,
@@ -77,34 +64,60 @@ pub fn control (
         );
     }
 
-    if input.is_action_activated(Action::MoveCamera) {
-        state.index += 1;
-    }
-
-    let mut i: usize = 0;
-
     let query = world.query::<(
-        &mut Transform, &mut Properties,
+        &mut time::ActionableObject,
     )>();
 
-    if state.index > 0 {
-        for (transform, props) in query {
-            i += 1;
+    let mut select_next_active_object = false;
 
-            if state.index == i {
-                state.position = Some(transform.translate);
-                props.active = true;
-            } else if props.active {
-                props.active = false;
-            }
+    for (object,) in query {
+        if !object.active && object.selected {
+            select_next_active_object = true;
         }
-    } else {
-        state.position = None;
     }
 
+    if input.is_action_activated(Action::MoveCamera) || select_next_active_object {
+        let query = world.query::<(
+            &mut Transform, &mut time::ActionableObject,
+        )>();
 
-    if state.index > i {
-        state.index = 0;
+        let mut selected_found = false;
+        let mut new_object_selected = false;
+
+        for (transform, object) in query {
+            if object.active && selected_found {
+                if *object.is_player {
+                    state.position = None;
+                } else {
+                    state.position = Some(transform.translate);
+                }
+                object.selected = true;
+                new_object_selected = true;
+            }
+
+            if object.selected && !new_object_selected {
+                selected_found = true;
+                object.selected = false;
+            }
+        }
+
+        let query = world.query::<(
+            &mut Transform, &mut time::ActionableObject,
+        )>();
+
+        if !new_object_selected {
+            for (transform, object) in query {
+                if object.active {
+                    if *object.is_player {
+                        state.position = None;
+                    } else {
+                        state.position = Some(transform.translate);
+                    }
+                    object.selected = true;
+                    break;
+                }
+            }
+        }
     }
 
     match state.position {

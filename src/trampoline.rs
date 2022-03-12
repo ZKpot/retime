@@ -4,15 +4,15 @@ use dotrix::{
     Assets, World, Transform, Input,
     pbr::{ Model, Material, },
     math::{ Vec3, },
-    ecs::{ self, Mut, Const, },
+    ecs::{ Mut, Const, },
     math::{ Quat },
     renderer::Render,
 };
 
 use crate::physics::{ self, vector, nalgebra, };
 use crate::player;
-use crate::camera;
 use crate::actions::Action;
+use crate::time;
 
 const TRAMP_X: f32 = 72.0;
 const TRAMP_Y: f32 = 0.01;
@@ -23,18 +23,6 @@ const BUTTON_X: f32 = 174.15;
 const BUTTON_Y: f32 = -20.0;
 const BUTTON_Z: f32 = -11.0;
 const BUTTON_MIN_DIST: f32 = 1.4;
-
-pub struct Context {
-    active: bool,
-}
-
-impl Default for Context {
-    fn default() -> Self {
-        Self {
-            active: false,
-        }
-    }
-}
 
 pub struct State {
 }
@@ -50,6 +38,7 @@ pub fn startup(
     mut assets: Mut<Assets>,
 ) {
     assets.import("assets/trampoline.gltf");
+    assets.import("assets/trampoline.png");
 }
 
 pub fn spawn(
@@ -76,7 +65,12 @@ pub fn spawn(
         },
         Render::default(),
         State::default(),
-        camera::Properties::default(),
+        time::ActionableObject {
+            active: false,
+            selected: false,
+            is_player: &false,
+            tile_texture_name: "trampoline",
+        },
     )));
 
     // add trampoline the collider set
@@ -129,7 +123,6 @@ pub fn spawn(
 }
 
 pub fn control(
-    mut context: ecs::Context<Context>,
     world: Const<World>,
     input: Const<Input>,
     mut physics_state: Mut<physics::State>,
@@ -137,12 +130,14 @@ pub fn control(
     let mut state_changed = false;
 
     // query trampoline
-    let query = world.query::<(&camera::Properties, )>();
+    let query = world.query::<(&State, &time::ActionableObject)>();
 
-    let mut camera_active = false;
+    let mut tramp_selected = false;
+    let mut tramp_active = false;
 
-    for (camera_prop,) in query {
-        camera_active = camera_prop.active;
+    for (_, object) in query {
+        tramp_selected = object.selected;
+        tramp_active = object.active;
     }
 
     // query player
@@ -159,7 +154,7 @@ pub fn control(
         let body = rigid_body_set.get_mut(*rigid_body).unwrap();
         let position = body.position().translation;
 
-        if context.active {
+        if tramp_active {
             let distance_to_tramp = (
                 (position.x - TRAMP_X).powf(2.0) +
                 position.y.powf(2.0) +
@@ -168,11 +163,10 @@ pub fn control(
 
             if (distance_to_tramp <= TRAMP_MIN_DIST) &&
                 input.is_action_activated(Action::TurnRight) &&
-                camera_active
+                tramp_selected
             {
                 println!("dist to tramp: {:?}", distance_to_tramp);
                 body.apply_impulse(vector![0.0, 150.0, 0.0], true);
-                context.active = false;
                 state_changed = true;
             }
         } else {
@@ -184,7 +178,6 @@ pub fn control(
 
             if distance_to_button <= BUTTON_MIN_DIST {
                 println!("dist to button: {:?}", distance_to_button);
-                context.active = true;
                 state_changed = true;
             }
         }
@@ -200,6 +193,16 @@ pub fn control(
         for (transform, _) in query {
             transform.rotate = transform.rotate *
                 Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin());
+        }
+
+        let query = world.query::<(
+            &Transform,
+            &State,
+            &mut time::ActionableObject
+        )>();
+
+        for (_, _, object) in query {
+            object.active = !object.active;
         }
     }
 }

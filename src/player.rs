@@ -7,7 +7,6 @@ use dotrix::{
 };
 
 use crate::actions;
-use crate::camera;
 use crate::time;
 
 use crate::physics::{
@@ -58,6 +57,7 @@ pub fn startup(
     mut assets: Mut<Assets>,
 ) {
     assets.import("assets/player.gltf");
+    assets.import("assets/player.png");
 }
 
 pub fn spawn(
@@ -93,6 +93,12 @@ pub fn spawn(
             ..Default::default()
         },
         Render::default(),
+        time::ActionableObject {
+            active: true,
+            selected: true,
+            is_player: &true,
+            tile_texture_name: "player",
+        },
         State::default(),
         ball_body_handle,
     )));
@@ -102,15 +108,14 @@ pub fn control(
     world: Const<World>,
     input: Const<Input>,
     camera: Const<dotrix::Camera>,
-    camera_state: Const<camera::State>,
     mut physics_state: Mut<physics::State>,
     time_stack: Const<time::Stack>,
 ) {
     let query = world.query::<(
-        &physics::RigidBodyHandle, &mut State,
+        &physics::RigidBodyHandle, &mut State, & time::ActionableObject
     )>();
 
-    for (rigid_body, state) in query {
+    for (rigid_body, state, object) in query {
 
         let rigid_body_set = &mut physics_state.physics
             .as_mut().expect("physics::State must be defined")
@@ -130,7 +135,7 @@ pub fn control(
 
         let mut is_any_action = false;
 
-        if camera_state.index == 0 {
+        if object.selected {
             if input.is_action_hold(actions::Action::MoveForward) {
                 torque_move = torque_move + fwd_dir;
                 is_any_action = true;
