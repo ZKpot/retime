@@ -4,6 +4,7 @@ use dotrix::{
     sky::{ skybox, },
     pbr::{ self, Light, },
     ecs::{ Mut, },
+    math::Vec3,
     egui, overlay,
     State as StateStack,
 };
@@ -121,11 +122,17 @@ fn before_init(
 }
 
 fn init_light(world: &mut World) {
+    world.spawn(Some((Light::Simple {
+        position: Vec3::new(0.0, 100.0, 0.0),
+        color: Color::white(),
+        intensity: 0.6,
+        enabled: true,
+    },)));
     world.spawn(
         Some((
             Light::Ambient {
                 color: Color::white(),
-                intensity: 0.5,
+                intensity: 0.4,
             },
         ))
     );
