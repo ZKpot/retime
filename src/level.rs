@@ -9,7 +9,7 @@ use crate::physics;
 pub fn startup(
     mut assets: Mut<Assets>,
 ) {
-    assets.import("assets/terrain.gltf");
+    assets.import("assets/level.gltf");
 }
 
 pub fn spawn (
@@ -17,8 +17,8 @@ pub fn spawn (
     mut assets: Mut<Assets>,
     mut physics_state: Mut<physics::State>,
 ) {
-    let texture = assets.register("terrain::texture");
-    let mesh_id = assets.register("terrain::mesh");
+    let texture = assets.register("level::texture");
+    let mesh_id = assets.register("level::mesh");
 
     while !assets.get(mesh_id).is_some() {}
 
