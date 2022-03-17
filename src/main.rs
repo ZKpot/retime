@@ -19,6 +19,7 @@ mod time;
 mod trampoline;
 mod states;
 mod time_capsule;
+mod ui_progress_bar;
 
 fn main() {
     Dotrix::application("ReTime")
