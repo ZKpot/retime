@@ -14,7 +14,7 @@ mod player;
 mod ui;
 mod camera;
 mod physics;
-mod terrain;
+mod level;
 mod time;
 mod trampoline;
 mod states;
@@ -25,7 +25,7 @@ fn main() {
         .with(System::from(startup))
         .with(System::from(player::startup))
         .with(System::from(camera::startup))
-        .with(System::from(terrain::startup))
+        .with(System::from(level::startup))
         .with(System::from(trampoline::startup))
 
         .with(System::from(ui::draw_panel))
@@ -38,7 +38,7 @@ fn main() {
             System::from(ui::init).with(StateStack::on::<states::LevelInit>())
         )
         .with(
-            System::from(terrain::spawn).with(StateStack::on::<states::LevelInit>())
+            System::from(level::spawn).with(StateStack::on::<states::LevelInit>())
         )
         .with(
             System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>())
@@ -123,16 +123,16 @@ fn before_init(
 
 fn init_light(world: &mut World) {
     world.spawn(Some((Light::Simple {
-        position: Vec3::new(0.0, 100.0, 0.0),
+        position: Vec3::new(20.0, 20.0, 0.0),
         color: Color::white(),
-        intensity: 0.6,
+        intensity: 0.5,
         enabled: true,
     },)));
     world.spawn(
         Some((
             Light::Ambient {
                 color: Color::white(),
-                intensity: 0.4,
+                intensity: 0.2,
             },
         ))
     );

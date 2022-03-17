@@ -14,14 +14,14 @@ use crate::player;
 use crate::actions::Action;
 use crate::time;
 
-const TRAMP_X: f32 = 72.0;
+const TRAMP_X: f32 = 25.0;
 const TRAMP_Y: f32 = 0.01;
-const TRAMP_Z: f32 = -11.0;
+const TRAMP_Z: f32 = 0.0;
 const TRAMP_MIN_DIST: f32 = 1.75;
 
-const BUTTON_X: f32 = 174.15;
-const BUTTON_Y: f32 = -20.0;
-const BUTTON_Z: f32 = -11.0;
+const BUTTON_X: f32 = 64.99;
+const BUTTON_Y: f32 = 1.5;
+const BUTTON_Z: f32 = 0.0;
 const BUTTON_MIN_DIST: f32 = 1.5;
 
 pub struct State {
@@ -166,7 +166,7 @@ pub fn control(
                 tramp_selected
             {
                 println!("dist to tramp: {:?}", distance_to_tramp);
-                body.apply_impulse(vector![0.0, 150.0, 0.0], true);
+                body.apply_impulse(vector![0.0, 90.0, 0.0], true);
                 state_changed = true;
             }
         } else {
