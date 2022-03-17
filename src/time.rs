@@ -17,6 +17,8 @@ pub const STACK_MAX_SIZE: usize = 900;
 pub struct Stack {
     pub physics_state: VecDeque<Option<physics::PhysicsState>>,
     pub index: usize,
+    pub index_max: usize,
+    pub di: usize,
 }
 
 impl Default for Stack {
@@ -24,6 +26,8 @@ impl Default for Stack {
         Self {
             physics_state: VecDeque::new(),
             index: 0,
+            index_max: 0,
+            di: 0
         }
     }
 }
@@ -42,14 +46,18 @@ pub fn rewind (
     mut state_stack: Mut<StateStack>,
 ) {
     stack.index += 1;
+    stack.di += 1;
 
-    println!("{:?} {:?}", stack.index, stack.physics_state.len());
+    println!("{:?} {:?} {:?}", stack.index, stack.physics_state.len(), stack.index_max);
     physics_state.physics = stack.physics_state[stack.index-1].clone();
 
     if input.is_action_deactivated(Action::RewindTime) ||
         !input.is_action_hold(Action::RewindTime) ||
-        (stack.index >= stack.physics_state.len())
+        (stack.index >= stack.physics_state.len()) ||
+        (stack.di >= stack.index_max)
     {
+        stack.index_max -= stack.di;
+        stack.di = 0;
         state_stack.pop::<states::RewindTime>().expect("Expected RewindTime state");
     }
 }
@@ -60,7 +68,7 @@ pub fn replay (
 ) {
     if stack.index > 0 {
         stack.index -= 1;
-        println!("{:?} {:?}", stack.index, stack.physics_state.len());
+        println!("{:?} {:?} {:?}", stack.index, stack.physics_state.len(), stack.index_max);
 
         // player
         if stack.index > 0 {
@@ -99,7 +107,9 @@ pub fn update_stacks (
         );
     }
 
-    if input.is_action_activated(Action::RewindTime) {
+    if input.is_action_activated(Action::RewindTime) &&
+        (stack.index_max > 0)
+    {
         state_stack.push(states::RewindTime {});
     }
 }

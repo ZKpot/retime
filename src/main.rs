@@ -77,6 +77,11 @@ fn main() {
                 .with(StateStack::on::<states::RunLevel>())
                 .with(StateStack::on::<states::RewindTime>())
         )
+        .with(
+            System::from(time_capsule::control)
+                .with(StateStack::on::<states::RunLevel>())
+                .with(StateStack::on::<states::RewindTime>())
+        )
 
         .with(System::from(physics::update_models))
         .with(System::from(physics::step).with(StateStack::on::<states::RunLevel>()))
