@@ -11,6 +11,7 @@ use dotrix::egui::{
 use crate::states;
 use crate::actions;
 use crate::time;
+use crate::ui_progress_bar::ProgressBar;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum WindowMode {
@@ -33,7 +34,7 @@ impl Default for State {
 }
 
 pub fn startup(
-    window: Const<Window>,
+    mut window: Mut<Window>,
 ) {
     window.set_inner_size(Vec2u::new(1280, 720));
 }
@@ -211,11 +212,14 @@ pub fn draw_panel(
         ..Default::default()
     };
 
-    let time_bar = (time::STACK_MAX_SIZE - time_stack.index) as f32 /
-        time::STACK_MAX_SIZE as f32;
+    let stack_len = time_stack.physics_state.len();
 
-    let time_bar_width = 20.0 + 140.0 * time_stack.physics_state.len() as f32 /
-        time::STACK_MAX_SIZE as f32;
+    let end = (stack_len - time_stack.index) as f32 / stack_len as f32;
+    let start = end -
+        (time_stack.index_max.min(time::STACK_MAX_SIZE) - time_stack.di) as f32 /
+        stack_len as f32;
+
+    let time_bar_width = 20.0 + 140.0 * stack_len as f32 / time::STACK_MAX_SIZE as f32;
 
     egui::containers::Window::new("game_bar")
         .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, offset))
@@ -225,10 +229,10 @@ pub fn draw_panel(
         .show(&egui.ctx, |ui| {
             egui::Grid::new("score")
                 .show(ui, |ui| {
-                    ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(), |ui| {
                         ui.set_min_width(170.0);
                         ui.add(
-                            egui::widgets::ProgressBar::new(time_bar)
+                            ProgressBar::new(start, end)
                                 .desired_width(time_bar_width)
                         );
                     });
