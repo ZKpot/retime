@@ -2,7 +2,7 @@ use dotrix::{
     Assets, World, Transform,
     pbr::{ Model, Material, },
     ecs::{ Mut, Entity, },
-    math::{ Vec3 },
+    math::{ Vec3, Quat, InnerSpace, },
     renderer::Render,
 };
 
@@ -77,10 +77,18 @@ pub fn control(
     let query = world.query::<(&Entity, &mut State, &mut Transform)>();
 
     for (entity, state, transform) in query {
+        // simple animation
+        let theta: f32 = 0.02;
+        let q = Quat::from_sv(
+            (theta/2.0).cos(),
+            Vec3::new(0.1, 0.95, 0.2).normalize() * (theta/2.0).sin(),
+        );
+
+        transform.rotate = transform.rotate * q;
+
         transform.translate.x = state.x;
         transform.translate.y = state.y;
         transform.translate.z = state.z;
-
 
         let dist_to_capsule = ((player_x-state.x).powf(2.0)+(player_z-state.z).powf(2.0)).sqrt();
 
