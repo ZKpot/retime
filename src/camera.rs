@@ -10,34 +10,26 @@ use crate::player;
 use crate::actions::Action;
 use crate::time;
 
-const CAMERA_SPD: f32 = 0.05; // < 1
 const DY: f32 = 8.0;
 const DZ: f32 = -12.0;
 
 pub struct State {
-    control_active: bool,
     position: Option<Vec3>,
-    distance: Option<f32>,
-    tilt: Option<f32>
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            control_active: false,
             position: None,
-            distance: None,
-            tilt: None,
         }
     }
 }
 
-pub fn startup (
+pub fn init (
     mut camera: Mut<dotrix::Camera>,
 ) {
     camera.pan = PI;
     camera.tilt = PI/8.0;
-    camera.distance = 10.0;
 }
 
 pub fn control (
@@ -122,36 +114,6 @@ pub fn control (
 
     match state.position {
         None => {
-            if let Some(distance) = state.distance.take() {
-                camera.distance = distance;
-            }
-
-            if let Some(tilt) = state.tilt.take() {
-                camera.tilt = tilt;
-            }
-
-            if input.is_action_deactivated(Action::RotateCamera) {
-                state.control_active = true;
-            }
-
-            if !input.is_action_hold(Action::RotateCamera) {
-                camera.pan = if state.control_active {
-                    let mut pan_error = PI - camera.pan;
-
-                    if pan_error.abs() > PI {
-                        pan_error = -pan_error.signum()*PI + pan_error%PI;
-                    }
-
-                    if pan_error.abs() < PI/128.0 {
-                        state.control_active = false;
-                        PI
-                    } else {
-                        camera.pan + pan_error * CAMERA_SPD
-                    }
-                } else {
-                    PI
-                }
-            }
             camera.position = None;
         },
         Some(mut camera_position) => {

@@ -26,7 +26,6 @@ fn main() {
         .with(System::from(ui::startup))
         .with(System::from(startup))
         .with(System::from(player::startup))
-        .with(System::from(camera::startup))
         .with(System::from(level::startup))
         .with(System::from(trampoline::startup))
         .with(System::from(time_capsule::startup))
@@ -34,45 +33,21 @@ fn main() {
         .with(System::from(ui::draw_panel))
         .with(System::from(ui::draw_menu))
 
-        .with(
-            System::from(before_init).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(ui::init).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(level::spawn).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(player::spawn).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(time_capsule::spawn).with(StateStack::on::<states::LevelInit>())
-        )
-        .with(
-            System::from(states::after_init).with(StateStack::on::<states::LevelInit>())
-        )
+        .with(System::from(before_init).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(camera::init).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(ui::init).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(level::spawn).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(player::spawn).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(time_capsule::spawn).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(states::after_init).with(StateStack::on::<states::LevelInit>()))
 
-        .with(
-            System::from(time::rewind).with(StateStack::on::<states::RewindTime>())
-        )
-        .with(
-            System::from(time::replay).with(StateStack::on::<states::RunLevel>())
-        )
-        .with(
-            System::from(player::control).with(StateStack::on::<states::RunLevel>())
-        )
-        .with(
-            System::from(trampoline::control).with(StateStack::on::<states::RunLevel>())
-        )
+        .with(System::from(time::rewind).with(StateStack::on::<states::RewindTime>()))
+        .with(System::from(time::replay).with(StateStack::on::<states::RunLevel>()))
+        .with(System::from(player::control).with(StateStack::on::<states::RunLevel>()))
+        .with(System::from(trampoline::control).with(StateStack::on::<states::RunLevel>()))
 
-        .with(
-            System::from(time::update_stacks)
-                .with(StateStack::on::<states::RunLevel>())
-        )
+        .with(System::from(time::update_stacks).with(StateStack::on::<states::RunLevel>()))
         .with(
             System::from(states::update)
                 .with(StateStack::on::<states::RunLevel>())
@@ -124,10 +99,12 @@ fn before_init(
     mut world: Mut<World>,
     mut physics_state: Mut<physics::State>,
     mut time_stack: Mut<time::Stack>,
+    mut camera_state: Mut<camera::State>,
 ) {
     world.reset();
     *physics_state = physics::State::default();
     *time_stack = time::Stack::default();
+    *camera_state = camera::State::default();
 
     init_light(&mut world);
 }
