@@ -124,10 +124,12 @@ fn before_init(
     mut world: Mut<World>,
     mut physics_state: Mut<physics::State>,
     mut time_stack: Mut<time::Stack>,
+    mut camera_state: Mut<camera::State>,
 ) {
     world.reset();
     *physics_state = physics::State::default();
     *time_stack = time::Stack::default();
+    *camera_state = camera::State::default();
 
     init_light(&mut world);
 }
