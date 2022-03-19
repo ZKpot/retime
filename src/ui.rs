@@ -34,7 +34,7 @@ impl Default for State {
 }
 
 pub fn startup(
-    window: Const<Window>,
+    mut window: Mut<Window>,
 ) {
     window.set_inner_size(Vec2u::new(1280, 720));
 }
