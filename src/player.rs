@@ -30,10 +30,12 @@ pub struct State {
 }
 
 impl State {
-    pub fn clear_action_stack(&mut self, index: usize) {
-        for i in 0..index {
+    pub fn clear_action_stack(&mut self, time_stack: &mut time::Stack) {
+        for i in time_stack.index_cleared..time_stack.index {
             self.action_stack[i] = None;
         }
+
+        time_stack.index_cleared = time_stack.index;
     }
 }
 
@@ -109,7 +111,7 @@ pub fn control(
     input: Const<Input>,
     camera: Const<dotrix::Camera>,
     mut physics_state: Mut<physics::State>,
-    time_stack: Const<time::Stack>,
+    mut time_stack: Mut<time::Stack>,
 ) {
     let query = world.query::<(
         &physics::RigidBodyHandle, &mut State, & time::ActionableObject
@@ -163,7 +165,7 @@ pub fn control(
         }
 
         if is_any_action {
-            state.clear_action_stack(time_stack.index);
+            state.clear_action_stack(&mut time_stack);
         } else {
             if let Some(current_action) = state.current_action.take() {
                 torque_move = current_action.torque_move;

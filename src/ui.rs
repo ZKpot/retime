@@ -11,7 +11,8 @@ use dotrix::egui::{
 use crate::states;
 use crate::actions;
 use crate::time;
-use crate::ui_progress_bar::ProgressBar;
+use crate::ui_clock::Clock;
+use std::f32::consts::PI;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum WindowMode {
@@ -192,7 +193,7 @@ pub fn draw_menu(
     }
 }
 
-pub fn draw_panel(
+pub fn draw_in_game_panels(
     world: Const<World>,
     overlay: Const<Overlay>,
     stats: Const<states::Stats>,
@@ -212,37 +213,35 @@ pub fn draw_panel(
         ..Default::default()
     };
 
-    let stack_len = time_stack.physics_state.len();
+    let scale = time::STACK_MAX_SIZE as f32;
 
-    let end = (stack_len - time_stack.index) as f32 / stack_len as f32;
-    let start = end -
-        (time_stack.index_max.min(time::STACK_MAX_SIZE) - time_stack.di) as f32 /
-        stack_len as f32;
-
-    let time_bar_width = 20.0 + 140.0 * stack_len as f32 / time::STACK_MAX_SIZE as f32;
-
-    egui::containers::Window::new("game_bar")
-        .anchor(egui::Align2::CENTER_TOP, egui::Vec2::new(0.0, offset))
+    egui::containers::Window::new("clock")
+        .anchor(egui::Align2::RIGHT_TOP, egui::Vec2::new(-offset, offset))
         .frame(game_frame)
         .resizable(false)
         .title_bar(false)
         .show(&egui.ctx, |ui| {
-            egui::Grid::new("score")
-                .show(ui, |ui| {
-                    ui.with_layout(egui::Layout::right_to_left(), |ui| {
-                        ui.set_min_width(170.0);
-                        ui.add(
-                            ProgressBar::new(start, end)
-                                .desired_width(time_bar_width)
-                        );
-                    });
-
-                    ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
-                        .color(egui::Color32::GRAY)
-                        .heading()
-                    ));
-                });
+            ui.add(
+                Clock::new(
+                    (time_stack.count-time_stack.index_cleared) as f32 / scale*PI,
+                    (time_stack.index-time_stack.index_cleared) as f32 / scale*PI,
+                    (time_stack.index_max+time_stack.index-time_stack.di-time_stack.index_cleared) as f32 /
+                        scale*PI,
+                )
+            );
         });
+
+        egui::containers::Window::new("score")
+            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::new(offset, offset))
+            .frame(game_frame)
+            .resizable(false)
+            .title_bar(false)
+            .show(&egui.ctx, |ui| {
+                ui.add(egui::Label::new(egui::RichText::new(format!("{:04.1}", stats.time))
+                    .color(egui::Color32::GRAY)
+                    .heading()
+                ));
+            });
 
     // actionable objects panel
     let image_size = 60.0;
