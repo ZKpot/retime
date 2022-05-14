@@ -19,7 +19,7 @@ mod time;
 mod trampoline;
 mod states;
 mod time_capsule;
-mod ui_progress_bar;
+mod ui_clock;
 
 fn main() {
     Dotrix::application("ReTime")
@@ -30,8 +30,8 @@ fn main() {
         .with(System::from(trampoline::startup))
         .with(System::from(time_capsule::startup))
 
-        .with(System::from(ui::draw_panel))
         .with(System::from(ui::draw_menu))
+        .with(System::from(ui::draw_in_game_panels))
 
         .with(System::from(before_init).with(StateStack::on::<states::LevelInit>()))
         .with(System::from(camera::init).with(StateStack::on::<states::LevelInit>()))

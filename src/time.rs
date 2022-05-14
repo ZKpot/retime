@@ -16,7 +16,9 @@ pub const STACK_MAX_SIZE: usize = 900;
 
 pub struct Stack {
     pub physics_state: VecDeque<Option<physics::PhysicsState>>,
+    pub count: usize,
     pub index: usize,
+    pub index_cleared: usize,
     pub index_max: usize,
     pub di: usize,
 }
@@ -25,7 +27,9 @@ impl Default for Stack {
     fn default() -> Self {
         Self {
             physics_state: VecDeque::new(),
+            count: 0,
             index: 0,
+            index_cleared: 0,
             index_max: 0,
             di: 0
         }
@@ -78,6 +82,12 @@ pub fn replay (
                     state_player.action_stack[stack.index-1].clone();
             }
         }
+    } else {
+        stack.count += 1;
+    }
+
+    if stack.index_cleared > stack.index {
+        stack.index_cleared = stack.index;
     }
 }
 
