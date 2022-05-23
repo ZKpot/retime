@@ -13,21 +13,7 @@ const SCALE: f32 = 0.4;
 const MIN_DIST: f32 = 0.75;
 
 pub struct State {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub collected: bool,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            x: 45.0,
-            z: 10.0,
-            y: 1.1,
-            collected: false,
-        }
-    }
+    pos: Vec3,
 }
 
 pub fn startup(
@@ -37,8 +23,9 @@ pub fn startup(
 }
 
 pub fn spawn(
-    mut world: Mut<World>,
-    mut assets: Mut<Assets>,
+    world: &mut World,
+    assets: &mut Assets,
+    init_state: &Vec3,
 ) {
     let texture = assets.register("time_capsule::texture");
     let mesh = assets.register("time_capsule::mesh");
@@ -53,7 +40,7 @@ pub fn spawn(
             scale: Vec3::new(SCALE, SCALE, SCALE),
             ..Default::default()
         },
-        State::default(),
+        State{ pos: *init_state },
         Render::default(),
     )));
 }
@@ -86,18 +73,14 @@ pub fn control(
 
         transform.rotate = transform.rotate * q;
 
-        transform.translate.x = state.x;
-        transform.translate.y = state.y;
-        transform.translate.z = state.z;
+        transform.translate = state.pos;
 
-        let dist_to_capsule = ((player_x-state.x).powf(2.0)+(player_z-state.z).powf(2.0)).sqrt();
+        let dist_to_capsule = (
+            (player_x-state.pos.x).powf(2.0)+(player_z-state.pos.z).powf(2.0)
+        ).sqrt();
 
         if dist_to_capsule <= MIN_DIST {
-            state.collected = true;
             time_stack.index_max += time::STACK_MAX_SIZE;
-        }
-
-        if state.collected {
             to_exile.push(*entity);
         }
     }

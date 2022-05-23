@@ -63,9 +63,10 @@ pub fn startup(
 }
 
 pub fn spawn(
-    mut world: Mut<World>,
-    mut assets: Mut<Assets>,
-    mut physics_state: Mut<physics::State>,
+    world: &mut World,
+    assets: &mut Assets,
+    physics_state: &mut physics::State,
+    player_position: &mut Vec3,
 ) {
     let state = physics_state.physics.as_mut().expect("physics::State must be defined");
 
@@ -91,7 +92,7 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: Vec3::new(0.0, 10.0, 0.0),
+            translate: *player_position,
             ..Default::default()
         },
         Render::default(),

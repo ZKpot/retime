@@ -25,10 +25,10 @@ fn main() {
     Dotrix::application("ReTime")
         .with(System::from(ui::startup))
         .with(System::from(startup))
-        .with(System::from(player::startup))
         .with(System::from(level::startup))
-        .with(System::from(trampoline::startup))
+        .with(System::from(player::startup))
         .with(System::from(time_capsule::startup))
+        .with(System::from(trampoline::startup))
 
         .with(System::from(ui::draw_menu))
         .with(System::from(ui::draw_in_game_panels))
@@ -38,8 +38,6 @@ fn main() {
         .with(System::from(ui::init).with(StateStack::on::<states::LevelInit>()))
         .with(System::from(level::spawn).with(StateStack::on::<states::LevelInit>()))
         .with(System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(player::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(time_capsule::spawn).with(StateStack::on::<states::LevelInit>()))
         .with(System::from(states::after_init).with(StateStack::on::<states::LevelInit>()))
 
         .with(System::from(time::rewind).with(StateStack::on::<states::RewindTime>()))
@@ -77,6 +75,8 @@ fn main() {
         .with(Service::from(camera::State::default()))
         .with(Service::from(ui::State::default()))
         .with(Service::from(states::Stats::default()))
+        //.with(Service::from(None as Option<level::Level>))
+        .with(Service::from(Some(level::Level::from_file("level_1.yaml"))))
 
         .with(pbr::extension)
         .with(skybox::extension)
@@ -100,11 +100,13 @@ fn before_init(
     mut physics_state: Mut<physics::State>,
     mut time_stack: Mut<time::Stack>,
     mut camera_state: Mut<camera::State>,
+    mut level: Mut<Option<level::Level>>,
 ) {
     world.reset();
     *physics_state = physics::State::default();
     *time_stack = time::Stack::default();
     *camera_state = camera::State::default();
+    *level = Some(level::Level::from_file("level_1.yaml"));
 
     init_light(&mut world);
 }

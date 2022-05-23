@@ -1,0 +1,17 @@
+---
+model: level_1
+player_position:
+  - 0.0
+  - 10.0
+  - 0.0
+objects:
+  - TimeCapsule:
+      pos:
+        - 45.0
+        - 1.1
+        - 10.0
+  - TimeCapsule:
+      pos:
+        - 35.0
+        - 1.1
+        - 15.0
