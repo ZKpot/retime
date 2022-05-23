@@ -44,8 +44,6 @@ fn main() {
         .with(System::from(time::replay).with(StateStack::on::<states::RunLevel>()))
         .with(System::from(player::control).with(StateStack::on::<states::RunLevel>()))
         .with(System::from(trampoline::control).with(StateStack::on::<states::RunLevel>()))
-
-        .with(System::from(time::update_stacks).with(StateStack::on::<states::RunLevel>()))
         .with(
             System::from(states::update)
                 .with(StateStack::on::<states::RunLevel>())
@@ -56,6 +54,7 @@ fn main() {
                 .with(StateStack::on::<states::RunLevel>())
                 .with(StateStack::on::<states::RewindTime>())
         )
+        .with(System::from(time::update_stacks).with(StateStack::on::<states::RunLevel>()))
 
         .with(System::from(physics::update_models))
         .with(System::from(physics::step).with(StateStack::on::<states::RunLevel>()))

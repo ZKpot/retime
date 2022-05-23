@@ -79,8 +79,8 @@ pub fn control(
             (player_x-state.pos.x).powf(2.0)+(player_z-state.pos.z).powf(2.0)
         ).sqrt();
 
-        if dist_to_capsule <= MIN_DIST {
-            time_stack.index_max += time::STACK_MAX_SIZE;
+        if (dist_to_capsule<=MIN_DIST) && (time_stack.index_max<time::STACK_MAX_SIZE) {
+            time_stack.index_max += time::STACK_MAX_SIZE / 2;
             to_exile.push(*entity);
         }
     }

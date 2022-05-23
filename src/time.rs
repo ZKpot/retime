@@ -100,6 +100,8 @@ pub fn update_stacks (
 ) {
     let index = stack.index;
 
+    stack.index_max = stack.index_max.min(STACK_MAX_SIZE);
+
     // physics engine
     update_stack(
         &mut stack.physics_state,

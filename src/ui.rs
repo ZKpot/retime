@@ -223,10 +223,10 @@ pub fn draw_in_game_panels(
         .show(&egui.ctx, |ui| {
             ui.add(
                 Clock::new(
-                    (time_stack.count-time_stack.index_cleared) as f32 / scale*PI,
-                    (time_stack.index-time_stack.index_cleared) as f32 / scale*PI,
+                    (time_stack.count-time_stack.index_cleared) as f32 / scale*2.0*PI,
+                    (time_stack.index-time_stack.index_cleared) as f32 / scale*2.0*PI,
                     (time_stack.index_max+time_stack.index-time_stack.di-time_stack.index_cleared) as f32 /
-                        scale*PI,
+                        scale*2.0*PI,
                 )
             );
         });
