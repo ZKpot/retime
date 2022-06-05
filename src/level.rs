@@ -32,18 +32,18 @@ impl Default for Ctx {
 
 #[derive(Serialize, Deserialize, std::fmt::Debug)]
 pub struct TimeCapsuleInit {
-    pub pos: (f32, f32, f32),
+    pub position: (f32, f32, f32),
 }
 
 #[derive(Serialize, Deserialize, std::fmt::Debug)]
 pub struct PlayerInit {
-    pub pos: (f32, f32, f32),
+    pub position: (f32, f32, f32),
 }
 
 #[derive(Serialize, Deserialize, std::fmt::Debug)]
 pub struct TrampolineInit {
-    pub pos_tramp: (f32, f32, f32),
-    pub pos_button: (f32, f32, f32),
+    pub base_position: (f32, f32, f32),
+    pub button_position: (f32, f32, f32),
 }
 
 #[derive(Serialize, Deserialize, std::fmt::Debug)]
@@ -56,6 +56,7 @@ pub enum Objects {
 #[derive(Serialize, Deserialize, std::fmt::Debug)]
 pub struct Level {
     model: String,
+    pub target_position: (f32, f32, f32),
     objects: Vec<Objects>,
 }
 
@@ -189,10 +190,10 @@ pub fn spawn (
                     &mut world,
                     &mut assets,
                     &mut physics_state,
-                    &mut Vec3::new(
-                        init_state.pos.0,
-                        init_state.pos.1,
-                        init_state.pos.2
+                    Vec3::new(
+                        init_state.position.0,
+                        init_state.position.1,
+                        init_state.position.2
                     )
                 );
             },
@@ -200,10 +201,10 @@ pub fn spawn (
                 time_capsule::spawn(
                     &mut world,
                     &mut assets,
-                    &mut Vec3::new(
-                        init_state.pos.0,
-                        init_state.pos.1,
-                        init_state.pos.2
+                    Vec3::new(
+                        init_state.position.0,
+                        init_state.position.1,
+                        init_state.position.2
                     )
                 )
             },
@@ -212,15 +213,15 @@ pub fn spawn (
                     &mut world,
                     &mut assets,
                     &mut physics_state,
-                    &mut Vec3::new(
-                        init_state.pos_tramp.0,
-                        init_state.pos_tramp.1,
-                        init_state.pos_tramp.2
+                    Vec3::new(
+                        init_state.base_position.0,
+                        init_state.base_position.1,
+                        init_state.base_position.2
                     ),
-                    &mut Vec3::new(
-                        init_state.pos_button.0,
-                        init_state.pos_button.1,
-                        init_state.pos_button.2
+                    Vec3::new(
+                        init_state.button_position.0,
+                        init_state.button_position.1,
+                        init_state.button_position.2
                     ),
                 )
             },

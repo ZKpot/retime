@@ -1,0 +1,45 @@
+---
+model: level_2
+target_position:
+  - 348.0
+  - -48.5
+  - -12.5
+objects:
+  - Player:
+      position:
+        - 0.0
+        - 10.0
+        - 0.0
+  - TimeCapsule:
+      position:
+        - 5.0
+        - 1.1
+        - 5.0
+  - TimeCapsule:
+      position:
+        - 5.0
+        - 1.1
+        - -5.0
+  - TimeCapsule:
+      position:
+        - 138.0
+        - -10
+        - -20.0
+  - Trampoline:
+      base_position:
+        - 135.0
+        - -13.25
+        - -5.0
+      button_position:
+        - 174.0
+        - -20.5
+        - -5.0
+  - Trampoline:
+      base_position:
+        - 135.0
+        - -13.25
+        - -20.0
+      button_position:
+        - 174.0
+        - -20.5
+        - -20.0

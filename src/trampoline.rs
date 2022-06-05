@@ -20,8 +20,8 @@ const TRAMP_MIN_DIST: f32 = 1.75;
 const BUTTON_MIN_DIST: f32 = 1.5;
 
 pub struct State {
-    pos_tramp: Vec3,
-    pos_button: Vec3,
+    base_position: Vec3,
+    button_position: Vec3,
     active: bool,
 }
 
@@ -37,15 +37,15 @@ pub fn spawn(
     world: &mut World,
     assets: &mut Assets,
     physics_state: &mut physics::State,
-    pos_tramp: &mut Vec3,
-    pos_button: &mut Vec3,
+    base_position: Vec3,
+    button_position: Vec3,
 ) {
     let texture = assets.register("trampoline::texture");
     let mesh_id = assets.register("trampoline::mesh");
 
     let state = Arc::new(Mutex::new(State {
-        pos_tramp: *pos_tramp,
-        pos_button: *pos_button,
+        base_position,
+        button_position,
         active: false,
     }));
 
@@ -57,7 +57,7 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: *pos_tramp,
+            translate: base_position,
             rotate: Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin()),
             scale: Vec3::new(0.4, 1.0, 0.4)
         },
@@ -98,7 +98,7 @@ pub fn spawn(
     let collider = physics::ColliderBuilder::trimesh(
         vertices,
         indices,
-    ).translation(vector![pos_tramp.x, 0.0, pos_tramp.z]).build();
+    ).translation(vector![base_position.x, 0.0, base_position.z]).build();
 
     physics_state.physics.as_mut().expect("physics::State must be defined")
         .collider_set.insert(collider);
@@ -111,7 +111,7 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: *pos_button,
+            translate: button_position,
             rotate: Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin()),
             scale: Vec3::new(0.4, 1.0, 0.4)
         },
@@ -146,9 +146,9 @@ pub fn control(
         let mut state = state.lock().unwrap();
         if !state.active {
             let distance_to_button = (
-                (player_position.x - state.pos_button.x).powf(2.0) +
-                (player_position.y - state.pos_button.y).powf(2.0) +
-                (player_position.z - state.pos_button.z).powf(2.0)
+                (player_position.x - state.button_position.x).powf(2.0) +
+                (player_position.y - state.button_position.y).powf(2.0) +
+                (player_position.z - state.button_position.z).powf(2.0)
             ).sqrt();
 
             if distance_to_button <= BUTTON_MIN_DIST {
@@ -175,9 +175,9 @@ pub fn control(
         let mut state = state.lock().unwrap();
         if state.active {
             let distance_to_tramp = (
-                (player_position.x - state.pos_tramp.x).powf(2.0) +
-                player_position.y.powf(2.0) +
-                (player_position.z - state.pos_tramp.z).powf(2.0)
+                (player_position.x - state.base_position.x).powf(2.0) +
+                (player_position.y - state.base_position.y).powf(2.0) +
+                (player_position.z - state.base_position.z).powf(2.0)
             ).sqrt();
 
             if (distance_to_tramp <= TRAMP_MIN_DIST) &&

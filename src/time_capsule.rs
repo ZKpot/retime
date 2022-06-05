@@ -14,7 +14,7 @@ const SCALE: f32 = 0.4;
 const MIN_DIST: f32 = 0.75;
 
 pub struct State {
-    pos: Vec3,
+    position: Vec3,
 }
 
 pub fn load_assets(
@@ -27,7 +27,7 @@ pub fn load_assets(
 pub fn spawn(
     world: &mut World,
     assets: &mut Assets,
-    init_state: &Vec3,
+    position: Vec3,
 ) {
     let texture = assets.register("time_capsule::texture");
     let mesh = assets.register("time_capsule::mesh");
@@ -42,7 +42,7 @@ pub fn spawn(
             scale: Vec3::new(SCALE, SCALE, SCALE),
             ..Default::default()
         },
-        State{ pos: *init_state },
+        State{ position },
         Render::default(),
     )));
 }
@@ -53,10 +53,12 @@ pub fn control(
 ) {
     // player
     let mut player_x = 0.0;
+    let mut player_y = 0.0;
     let mut player_z = 0.0;
     let query = world.query::<(&player::State, &Transform)>();
     for (_, transform) in query {
         player_x = transform.translate.x;
+        player_y = transform.translate.y;
         player_z = transform.translate.z;
     }
 
@@ -75,10 +77,12 @@ pub fn control(
 
         transform.rotate = transform.rotate * q;
 
-        transform.translate = state.pos;
+        transform.translate = state.position;
 
         let dist_to_capsule = (
-            (player_x-state.pos.x).powf(2.0)+(player_z-state.pos.z).powf(2.0)
+            (player_x-state.position.x).powf(2.0)+
+            (player_y-state.position.y).powf(2.0)+
+            (player_z-state.position.z).powf(2.0)
         ).sqrt();
 
         if (dist_to_capsule<=MIN_DIST) && (time_stack.index_max<time::STACK_MAX_SIZE) {

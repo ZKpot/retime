@@ -1,6 +1,7 @@
 use dotrix::{
     State, World, Transform,
     ecs::{ Mut, Const, },
+    math::{ Vec3, },
 };
 
 use crate::physics;
@@ -10,18 +11,24 @@ use crate::player;
 pub struct Stats {
     pub time: f32,
     pub level_passed: bool,
+    pub finish_pos: Vec3,
 }
 
-impl Default for Stats {
-    fn default() -> Self {
+impl Stats {
+    pub fn new(finish_pos: Vec3) -> Self {
         Self {
             time: 0.0,
-            level_passed: false
+            level_passed: false,
+            finish_pos,
         }
     }
 }
 
 // States
+pub struct MainMenu {
+    pub selected_level: Option<String>,
+}
+
 pub struct Pause {
     pub handled: bool,
 }
@@ -55,19 +62,19 @@ pub struct RewindTime {}
 // Systems
 pub fn after_init(
     mut state: Mut<State>,
-    mut game_state: Mut<Stats>,
 ) {
-    *game_state = Stats::default();
-    state.clear();
     state.push(RunLevel {});
 }
 
 pub fn update (
-    mut stats: Mut<Stats>,
+    mut stats_opt: Mut<Option<Stats>>,
     physics_state: Const<physics::State>,
     world: Const<World>,
     mut state: Mut<State>,
 ) {
+    let mut stats = stats_opt.as_mut()
+        .expect("Game stats should be initialized");
+
     stats.time += physics_state.physics.as_ref()
         .expect("physics_state must be defined").integration_parameters.dt;
 
@@ -76,7 +83,11 @@ pub fn update (
     )>();
 
     for (transform, _) in query {
-        if transform.translate.x > 97.0 {
+        if (
+            (transform.translate.x - stats.finish_pos.x).powi(2) +
+            (transform.translate.y - stats.finish_pos.y).powi(2) +
+            (transform.translate.z - stats.finish_pos.z).powi(2)
+        ).sqrt() <= 2.0 {
             stats.level_passed = true;
             state.push(Pause::default());
         }

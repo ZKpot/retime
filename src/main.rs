@@ -26,11 +26,10 @@ fn main() {
         .with(System::from(ui::startup))
         .with(System::from(startup))
 
+        .with(System::from(ui::draw_main_menu).with(StateStack::on::<states::MainMenu>()))
+
         .with(System::from(ui::draw_loading_screen).with(StateStack::on::<states::LoadAssets>()))
         .with(System::from(level::load_assets).with(StateStack::on::<states::LoadAssets>()))
-
-        .with(System::from(ui::draw_menu).with(StateStack::off::<states::LoadAssets>()))
-        .with(System::from(ui::draw_in_game_panels).with(StateStack::off::<states::LoadAssets>()))
 
         .with(System::from(before_init).with(StateStack::on::<states::InitLevel>()))
         .with(System::from(camera::init).with(StateStack::on::<states::InitLevel>()))
@@ -67,11 +66,26 @@ fn main() {
                 .with(StateStack::on::<states::RewindTime>())
         )
 
+        .with(System::from(ui::draw_menu)
+            .with(StateStack::on::<states::RunLevel>())
+            .with(StateStack::on::<states::RewindTime>())
+            .with(StateStack::on::<states::Pause>())
+        )
+        .with(System::from(ui::draw_in_game_panels)
+            .with(StateStack::on::<states::RunLevel>())
+            .with(StateStack::on::<states::RewindTime>())
+        )
+        .with(
+            System::from(ui::draw_background)
+                .with(StateStack::on::<states::MainMenu>())
+                .with(StateStack::on::<states::LoadAssets>())
+        )
+
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
         .with(Service::from(ui::State::default()))
-        .with(Service::from(states::Stats::default()))
+        .with(Service::from(None as Option<states::Stats>))
         .with(Service::from(None as Option<level::Level>))
 
         .with(pbr::extension)
@@ -85,12 +99,10 @@ fn main() {
 fn startup(
     mut input: Mut<Input>,
     mut state_stack: Mut<StateStack>,
-    mut level: Mut<Option<level::Level>>,
 ) {
     actions::init_actions(&mut input);
 
-    state_stack.push(states::LoadAssets::default());
-    *level = Some(level::Level::from_file("level_1.yaml"));
+    state_stack.push(states::MainMenu {selected_level: None});
 }
 
 fn before_init(
@@ -98,13 +110,11 @@ fn before_init(
     mut physics_state: Mut<physics::State>,
     mut time_stack: Mut<time::Stack>,
     mut camera_state: Mut<camera::State>,
-    mut level: Mut<Option<level::Level>>,
 ) {
     world.reset();
     *physics_state = physics::State::default();
     *time_stack = time::Stack::default();
     *camera_state = camera::State::default();
-    *level = Some(level::Level::from_file("level_1.yaml"));
 
     init_light(&mut world);
 }
