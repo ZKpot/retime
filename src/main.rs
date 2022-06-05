@@ -25,20 +25,17 @@ fn main() {
     Dotrix::application("ReTime")
         .with(System::from(ui::startup))
         .with(System::from(startup))
-        .with(System::from(level::startup))
-        .with(System::from(player::startup))
-        .with(System::from(time_capsule::startup))
-        .with(System::from(trampoline::startup))
+
+        .with(System::from(level::load_assets).with(StateStack::on::<states::LoadAssets>()))
 
         .with(System::from(ui::draw_menu))
         .with(System::from(ui::draw_in_game_panels))
 
-        .with(System::from(before_init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(camera::init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(ui::init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(level::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(states::after_init).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(before_init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(camera::init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(ui::init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(level::spawn).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(states::after_init).with(StateStack::on::<states::InitLevel>()))
 
         .with(System::from(time::rewind).with(StateStack::on::<states::RewindTime>()))
         .with(System::from(time::replay).with(StateStack::on::<states::RunLevel>()))
@@ -74,8 +71,7 @@ fn main() {
         .with(Service::from(camera::State::default()))
         .with(Service::from(ui::State::default()))
         .with(Service::from(states::Stats::default()))
-        //.with(Service::from(None as Option<level::Level>))
-        .with(Service::from(Some(level::Level::from_file("level_1.yaml"))))
+        .with(Service::from(None as Option<level::Level>))
 
         .with(pbr::extension)
         .with(skybox::extension)
@@ -88,10 +84,12 @@ fn main() {
 fn startup(
     mut input: Mut<Input>,
     mut state_stack: Mut<StateStack>,
+    mut level: Mut<Option<level::Level>>,
 ) {
     actions::init_actions(&mut input);
 
-    state_stack.push(states::LevelInit {});
+    state_stack.push(states::LoadAssets::default());
+    *level = Some(level::Level::from_file("level_1.yaml"));
 }
 
 fn before_init(

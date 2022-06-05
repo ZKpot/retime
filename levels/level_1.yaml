@@ -1,10 +1,11 @@
 ---
 model: level_1
-player_position:
-  - 0.0
-  - 10.0
-  - 0.0
 objects:
+  - Player:
+      pos:
+        - 0.0
+        - 10.0
+        - 0.0
   - TimeCapsule:
       pos:
         - 45.0
@@ -15,3 +16,12 @@ objects:
         - 35.0
         - 1.1
         - 15.0
+  - Trampoline:
+      pos_tramp:
+        - 25.0
+        - 0.01
+        - 0.0
+      pos_button:
+        - 64.99
+        - 1.5
+        - 0.0

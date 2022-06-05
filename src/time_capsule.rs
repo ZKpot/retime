@@ -1,5 +1,6 @@
 use dotrix::{
-    Assets, World, Transform,
+    Assets, World, Transform, Id,
+    assets::Mesh,
     pbr::{ Model, Material, },
     ecs::{ Mut, Entity, },
     math::{ Vec3, Quat, InnerSpace, },
@@ -16,10 +17,11 @@ pub struct State {
     pos: Vec3,
 }
 
-pub fn startup(
-    mut assets: Mut<Assets>,
-) {
+pub fn load_assets(
+    assets: &mut Assets,
+) -> Id<Mesh> {
     assets.import("assets/time_capsule.gltf");
+    assets.register("time_capsule::mesh")
 }
 
 pub fn spawn(

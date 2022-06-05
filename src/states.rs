@@ -27,14 +27,26 @@ pub struct Pause {
 }
 
 impl Default for Pause {
-    fn default() -> Self{
-        Self{
+    fn default() -> Self {
+        Self {
             handled: false,
         }
     }
 }
 
-pub struct LevelInit {}
+pub struct LoadAssets {
+    pub imported: bool,
+}
+
+impl Default for LoadAssets {
+    fn default() -> Self {
+        Self {
+            imported: false,
+        }
+    }
+}
+
+pub struct InitLevel {}
 
 pub struct RunLevel {}
 

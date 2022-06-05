@@ -136,7 +136,7 @@ pub fn draw_menu(
                     }
 
                     if ui.button("Reset level").clicked() {
-                        state_stack.push(states::LevelInit {});
+                        state_stack.push(states::InitLevel {});
                     }
 
                     ui.add_space(25.0);

@@ -1,7 +1,9 @@
 use std::f32::consts::PI;
+use std::sync::{ Arc, Mutex, };
 
 use dotrix::{
-    Assets, World, Transform, Input,
+    Assets, World, Transform, Input, Id,
+    assets::Mesh,
     pbr::{ Model, Material, },
     math::{ Vec3, },
     ecs::{ Mut, Const, },
@@ -14,42 +16,38 @@ use crate::player;
 use crate::actions::Action;
 use crate::time;
 
-const TRAMP_X: f32 = 25.0;
-const TRAMP_Y: f32 = 0.01;
-const TRAMP_Z: f32 = 0.0;
 const TRAMP_MIN_DIST: f32 = 1.75;
-
-const BUTTON_X: f32 = 64.99;
-const BUTTON_Y: f32 = 1.5;
-const BUTTON_Z: f32 = 0.0;
 const BUTTON_MIN_DIST: f32 = 1.5;
 
 pub struct State {
+    pos_tramp: Vec3,
+    pos_button: Vec3,
+    active: bool,
 }
 
-impl Default for State {
-    fn default() -> Self {
-        Self {
-        }
-    }
-}
-
-pub fn startup(
-    mut assets: Mut<Assets>,
-) {
+pub fn load_assets(
+    assets: &mut Assets,
+) -> Id<Mesh> {
     assets.import("assets/trampoline.gltf");
     assets.import("assets/trampoline.png");
+    assets.register("trampoline::mesh")
 }
 
 pub fn spawn(
-    mut world: Mut<World>,
-    mut assets: Mut<Assets>,
-    mut physics_state: Mut<physics::State>,
+    world: &mut World,
+    assets: &mut Assets,
+    physics_state: &mut physics::State,
+    pos_tramp: &mut Vec3,
+    pos_button: &mut Vec3,
 ) {
     let texture = assets.register("trampoline::texture");
     let mesh_id = assets.register("trampoline::mesh");
 
-    while !assets.get(mesh_id).is_some() {}
+    let state = Arc::new(Mutex::new(State {
+        pos_tramp: *pos_tramp,
+        pos_button: *pos_button,
+        active: false,
+    }));
 
     // spawn trampoline
     world.spawn(Some((
@@ -59,12 +57,12 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: Vec3::new(TRAMP_X, TRAMP_Y, TRAMP_Z),
+            translate: *pos_tramp,
             rotate: Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin()),
-            ..Default::default()
+            scale: Vec3::new(0.4, 1.0, 0.4)
         },
         Render::default(),
-        State::default(),
+        state.clone(),
         time::ActionableObject {
             active: false,
             selected: false,
@@ -76,7 +74,7 @@ pub fn spawn(
     // add trampoline the collider set
     let mesh = assets.get(mesh_id).unwrap();
 
-    let mut indices  = Vec::new();
+    let mut indices = Vec::new();
 
     let vertices = mesh.vertices_as::<[f32; 3]>(0).collect::<Vec<_>>()
         .iter().map(|elem| physics::nalgebra::Point3::new(
@@ -87,7 +85,7 @@ pub fn spawn(
         ).collect();
 
     let indices_mesh = mesh.indices().take()
-    .expect("trampoline mesh should contain indices");
+        .expect("trampoline mesh should contain indices");
 
     for i in 0..indices_mesh.len()/3 {
         indices.push([
@@ -100,7 +98,7 @@ pub fn spawn(
     let collider = physics::ColliderBuilder::trimesh(
         vertices,
         indices,
-    ).translation(vector![TRAMP_X, 0.0, TRAMP_Z]).build();
+    ).translation(vector![pos_tramp.x, 0.0, pos_tramp.z]).build();
 
     physics_state.physics.as_mut().expect("physics::State must be defined")
         .collider_set.insert(collider);
@@ -113,12 +111,12 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: Vec3::new(BUTTON_X, BUTTON_Y, BUTTON_Z),
+            translate: *pos_button,
             rotate: Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin()),
             scale: Vec3::new(0.4, 1.0, 0.4)
         },
         Render::default(),
-        State::default(),
+        state.clone(),
     )));
 }
 
@@ -127,82 +125,77 @@ pub fn control(
     input: Const<Input>,
     mut physics_state: Mut<physics::State>,
 ) {
-    let mut state_changed = false;
 
-    // query trampoline
-    let query = world.query::<(&State, &time::ActionableObject)>();
-
-    let mut tramp_selected = false;
-    let mut tramp_active = false;
-
-    for (_, object) in query {
-        tramp_selected = object.selected;
-        tramp_active = object.active;
-    }
 
     // query player
-    let query = world.query::<(
-        &physics::RigidBodyHandle,
-        &mut player::State,
-    )>();
+    let mut query = world.query::<(&physics::RigidBodyHandle, &mut player::State,)>();
 
-    for (rigid_body, _) in query {
-        let rigid_body_set = &mut physics_state.physics
+    let (rigid_body, _) = query.next().take().expect("player is not found");
+
+    let rigid_body_set = &mut physics_state.physics
             .as_mut().expect("physics::State must be defined")
             .rigid_body_set;
 
-        let body = rigid_body_set.get_mut(*rigid_body).unwrap();
-        let position = body.position().translation;
+    let body = rigid_body_set.get_mut(*rigid_body).unwrap();
+    let player_position = body.position().translation;
 
-        if tramp_active {
+    // query button
+    let query = world.query::<(&mut Transform, &mut Arc<Mutex<State>>,)>();
+
+    for (transform, state) in query {
+        let mut state = state.lock().unwrap();
+        if !state.active {
+            let distance_to_button = (
+                (player_position.x - state.pos_button.x).powf(2.0) +
+                (player_position.y - state.pos_button.y).powf(2.0) +
+                (player_position.z - state.pos_button.z).powf(2.0)
+            ).sqrt();
+
+            if distance_to_button <= BUTTON_MIN_DIST {
+                state.active = true;
+            }
+        }
+
+        if state.active {
+            transform.rotate = Quat::new((3.0*PI/4.0).cos(), 0.0, 0.0, (3.0*PI/4.0).sin());
+        } else {
+            transform.rotate = Quat::new((PI/4.0).cos(), 0.0, 0.0, (PI/4.0).sin());
+        };
+    }
+
+
+    // query trampoline
+    let query = world.query::<(
+        &mut Transform,
+        &mut Arc<Mutex<State>>,
+        &mut time::ActionableObject,
+    )>();
+
+    for (transform, state, object) in query {
+        let mut state = state.lock().unwrap();
+        if state.active {
             let distance_to_tramp = (
-                (position.x - TRAMP_X).powf(2.0) +
-                position.y.powf(2.0) +
-                (position.z - TRAMP_Z).powf(2.0)
+                (player_position.x - state.pos_tramp.x).powf(2.0) +
+                player_position.y.powf(2.0) +
+                (player_position.z - state.pos_tramp.z).powf(2.0)
             ).sqrt();
 
             if (distance_to_tramp <= TRAMP_MIN_DIST) &&
                 input.is_action_activated(Action::TurnRight) &&
-                tramp_selected
+                object.selected
             {
                 println!("dist to tramp: {:?}", distance_to_tramp);
                 body.apply_impulse(vector![0.0, 90.0, 0.0], true);
-                state_changed = true;
+                state.active = false;
             }
+        }
+
+        if state.active {
+            transform.rotate = Quat::new(PI.cos(), 0.0, 0.0, PI.sin());
         } else {
-            let distance_to_button = (
-                (position.x - BUTTON_X).powf(2.0) +
-                (position.y - BUTTON_Y).powf(2.0) +
-                (position.z - BUTTON_Z).powf(2.0)
-            ).sqrt();
+            transform.rotate = Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin());
+        };
 
-            if distance_to_button <= BUTTON_MIN_DIST {
-                println!("dist to button: {:?}", distance_to_button);
-                state_changed = true;
-            }
-        }
-    }
-
-    //query trampoline and button
-    if state_changed {
-        let query = world.query::<(
-            &mut Transform,
-            &State,
-        )>();
-
-        for (transform, _) in query {
-            transform.rotate = transform.rotate *
-                Quat::new((PI/2.0).cos(), 0.0, 0.0, (PI/2.0).sin());
-        }
-
-        let query = world.query::<(
-            &Transform,
-            &State,
-            &mut time::ActionableObject
-        )>();
-
-        for (_, _, object) in query {
-            object.active = !object.active;
-        }
+        object.active = state.active;
     }
 }

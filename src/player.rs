@@ -1,5 +1,6 @@
 use dotrix::{
-    Assets, World, Transform, Input,
+    Assets, World, Transform, Input, Id,
+    assets::Mesh,
     pbr::{ Model, Material, },
     ecs::{ Mut, Const, },
     math::{ Vec3 },
@@ -55,11 +56,12 @@ pub struct Action {
     pub torque_rotate: Vector<Real>,
 }
 
-pub fn startup(
-    mut assets: Mut<Assets>,
-) {
+pub fn load_assets(
+    assets: &mut Assets,
+) -> Id<Mesh> {
     assets.import("assets/player.gltf");
     assets.import("assets/player.png");
+    assets.register("player::mesh")
 }
 
 pub fn spawn(
