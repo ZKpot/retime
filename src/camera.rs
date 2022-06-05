@@ -85,6 +85,7 @@ pub fn control (
                 }
                 object.selected = true;
                 new_object_selected = true;
+                selected_found = false;
             }
 
             if object.selected && !new_object_selected {
