@@ -49,6 +49,30 @@ pub fn init(
     window.set_cursor_visible(false);
 }
 
+pub fn draw_loading_screen(
+    overlay: Const<Overlay>,
+) {
+    //loading screen
+    let egui = overlay.get::<Egui>()
+        .expect("Renderer does not contain an Overlay instance");
+
+    let load_frame = egui::containers::Frame{
+        fill: egui::Color32::from_gray(0),
+        margin: egui::Vec2::new(5.0, 5.0),
+        ..Default::default()
+    };
+
+    egui::containers::panel::CentralPanel::default()
+        .frame(load_frame)
+        .show(&egui.ctx, |ui| {
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
+                ui.add(egui::Label::new(
+                    egui::RichText::new("Loading assets...").heading()
+                ));
+            });
+        });
+}
+
 pub fn draw_menu(
     input: Const<Input>,
     overlay: Const<Overlay>,

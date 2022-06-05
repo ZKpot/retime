@@ -26,10 +26,11 @@ fn main() {
         .with(System::from(ui::startup))
         .with(System::from(startup))
 
+        .with(System::from(ui::draw_loading_screen).with(StateStack::on::<states::LoadAssets>()))
         .with(System::from(level::load_assets).with(StateStack::on::<states::LoadAssets>()))
 
-        .with(System::from(ui::draw_menu))
-        .with(System::from(ui::draw_in_game_panels))
+        .with(System::from(ui::draw_menu).with(StateStack::off::<states::LoadAssets>()))
+        .with(System::from(ui::draw_in_game_panels).with(StateStack::off::<states::LoadAssets>()))
 
         .with(System::from(before_init).with(StateStack::on::<states::InitLevel>()))
         .with(System::from(camera::init).with(StateStack::on::<states::InitLevel>()))
