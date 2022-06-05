@@ -183,19 +183,26 @@ pub fn spawn (
         .collider_set.insert(collider);
 
     // spawn all objects
+    let mut player_spawned = false;
+
     while let Some(object) = level.objects.pop() {
         match object {
             Objects::Player(init_state) => {
-                player::spawn(
-                    &mut world,
-                    &mut assets,
-                    &mut physics_state,
-                    Vec3::new(
-                        init_state.position.0,
-                        init_state.position.1,
-                        init_state.position.2
-                    )
-                );
+                if player_spawned {
+                    println!("Only one player entity is allowed");
+                } else {
+                    player::spawn(
+                        &mut world,
+                        &mut assets,
+                        &mut physics_state,
+                        Vec3::new(
+                            init_state.position.0,
+                            init_state.position.1,
+                            init_state.position.2
+                        )
+                    );
+                    player_spawned = true;
+                }
             },
             Objects::TimeCapsule(init_state) => {
                 time_capsule::spawn(
