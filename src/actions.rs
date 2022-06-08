@@ -16,7 +16,8 @@ pub fn init_actions(input: &mut Input) {
         (Action::RewindTime, Button::Key(KeyCode::Space), Modifiers::empty()),
         (Action::Pause, Button::Key(KeyCode::Escape), Modifiers::empty()),
         (Action::RotateCamera, Button::MouseRight, Modifiers::empty()),
-        (Action::MoveCamera, Button::Key(KeyCode::Right), Modifiers::empty()),
+        (Action::SelectActiveObjectRight, Button::Key(KeyCode::Right), Modifiers::empty()),
+        (Action::SelectActiveObjectLeft, Button::Key(KeyCode::Left), Modifiers::empty()),
     ]);
 }
 
@@ -31,7 +32,9 @@ pub enum Action {
     RewindTime,
     Pause,
     RotateCamera,
-    MoveCamera,
+    SelectActiveObjectRight,
+    SelectActiveObjectLeft,
+
 }
 
 // Bind Inputs and Actions

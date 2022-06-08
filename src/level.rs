@@ -12,6 +12,7 @@ use crate::time_capsule;
 use crate::player;
 use crate::states;
 use crate::trampoline;
+use crate::camera;
 
 use serde::{Serialize, Deserialize};
 use std::{fs, path};
@@ -129,6 +130,7 @@ pub fn spawn (
     mut world: Mut<World>,
     mut assets: Mut<Assets>,
     mut physics_state: Mut<physics::State>,
+    mut camera_state: Mut<camera::State>,
 ) {
     let mut level = level_opt.take()
         .expect("Some level should be loaded");
@@ -182,16 +184,13 @@ pub fn spawn (
     physics_state.physics.as_mut().expect("physics::State must be defined")
         .collider_set.insert(collider);
 
-    // spawn all objects
-    let mut player_spawned = false;
-
     while let Some(object) = level.objects.pop() {
         match object {
             Objects::Player(init_state) => {
-                if player_spawned {
+                if camera_state.player_entity.is_some() {
                     println!("Only one player entity is allowed");
                 } else {
-                    player::spawn(
+                    camera_state.player_entity = Some(player::spawn(
                         &mut world,
                         &mut assets,
                         &mut physics_state,
@@ -200,8 +199,7 @@ pub fn spawn (
                             init_state.position.1,
                             init_state.position.2
                         )
-                    );
-                    player_spawned = true;
+                    ));
                 }
             },
             Objects::TimeCapsule(init_state) => {

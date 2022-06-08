@@ -66,7 +66,7 @@ pub fn spawn(
         time::ActionableObject {
             active: false,
             selected: false,
-            is_player: &false,
+            is_player: false,
             tile_texture_name: "trampoline",
         },
     )));

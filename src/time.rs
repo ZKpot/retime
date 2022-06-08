@@ -36,10 +36,11 @@ impl Default for Stack {
     }
 }
 
+#[derive(Debug)]
 pub struct ActionableObject {
     pub active: bool,
     pub selected: bool,
-    pub is_player: &'static bool,
+    pub is_player: bool,
     pub tile_texture_name: &'static str,
 }
 

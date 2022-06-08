@@ -2,7 +2,7 @@ use dotrix::{
     Assets, World, Transform, Input, Id,
     assets::Mesh,
     pbr::{ Model, Material, },
-    ecs::{ Mut, Const, },
+    ecs::{ Mut, Const, Entity, },
     math::{ Vec3 },
     renderer::Render,
 };
@@ -69,7 +69,7 @@ pub fn spawn(
     assets: &mut Assets,
     physics_state: &mut physics::State,
     player_position: Vec3,
-) {
+) -> Entity {
     let state = physics_state.physics.as_mut().expect("physics::State must be defined");
 
     let texture = assets.register("player::texture");
@@ -101,12 +101,12 @@ pub fn spawn(
         time::ActionableObject {
             active: true,
             selected: true,
-            is_player: &true,
+            is_player: true,
             tile_texture_name: "player",
         },
         State::default(),
         ball_body_handle,
-    )));
+    ))).first()
 }
 
 pub fn control(
