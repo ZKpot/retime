@@ -1,5 +1,5 @@
 use dotrix::{
-    Assets, World, Id,
+    Assets, World, Id, Frame,
     assets::Mesh,
     pbr,
     ecs::{ Mut, Const, Context,},
@@ -75,6 +75,7 @@ pub fn load_assets(
     mut assets: Mut<Assets>,
     mut state_stack: Mut<StateStack>,
     level_opt: Const<Option<Level>>,
+    frame: Const<Frame>,
 ) {
     let mut load_state = state_stack.get_mut::<states::LoadAssets>()
         .expect("something terrible has happened");
@@ -120,7 +121,9 @@ pub fn load_assets(
 
     ctx.mesh_ids.retain(|&x| !assets.get(x).is_some());
 
-    if ctx.mesh_ids.is_empty() {
+    load_state.time_left_secs -= (frame.delta().subsec_nanos() as f32) * 1e-9;
+
+    if ctx.mesh_ids.is_empty() && load_state.time_left_secs < 0.0 {
         state_stack.push(states::InitLevel {});
     }
 }

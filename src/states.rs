@@ -43,12 +43,14 @@ impl Default for Pause {
 
 pub struct LoadAssets {
     pub imported: bool,
+    pub time_left_secs: f32,
 }
 
 impl Default for LoadAssets {
     fn default() -> Self {
         Self {
             imported: false,
+            time_left_secs: 0.3,
         }
     }
 }
