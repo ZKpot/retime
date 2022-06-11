@@ -1,9 +1,10 @@
 use dotrix::{
-    Assets, World, Id, Frame,
+    Assets, World, Id, Frame, Transform,
     assets::Mesh,
-    pbr,
+    pbr::{ self, Model, Material, },
     ecs::{ Mut, Const, Context,},
     math::{ Vec3, },
+    renderer::Render,
     State as StateStack,
 };
 
@@ -93,6 +94,12 @@ pub fn load_assets(
             ));
         }
 
+        if !ctx.loaded.contains(&"target_flag".to_string()) {
+            assets.import("assets/target_flag.gltf");
+            ctx.loaded.push("target_flag".to_string());
+            println!("{:?}", ctx.loaded);
+        }
+
         for object in level.objects.iter() {
             match object {
                 Objects::TimeCapsule(_) => {
@@ -137,6 +144,29 @@ pub fn spawn (
 ) {
     let mut level = level_opt.take()
         .expect("Some level should be loaded");
+
+    // spawn the flag
+    let texture = assets.register("target_flag::texture");
+    let mesh = assets.register("target_flag::mesh");
+
+    println!("{:?} {:?}", mesh, texture);
+
+    world.spawn(Some((
+        Model::from(mesh),
+        Material {
+            texture,
+            ..Default::default()
+        },
+        Transform {
+            translate: Vec3::new(
+                level.target_position.0,
+                level.target_position.1,
+                level.target_position.2
+            ),
+            ..Default::default()
+        },
+        Render::default(),
+    )));
 
     // spawn level model
     let texture = assets.register(

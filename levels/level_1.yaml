@@ -2,7 +2,7 @@
 model: level_1
 target_position:
   - 99.0
-  - 11.0
+  - 10.4
   - 0.0
 objects:
   - Player:
