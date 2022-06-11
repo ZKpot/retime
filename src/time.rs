@@ -36,10 +36,11 @@ impl Default for Stack {
     }
 }
 
+#[derive(Debug)]
 pub struct ActionableObject {
     pub active: bool,
     pub selected: bool,
-    pub is_player: &'static bool,
+    pub is_player: bool,
     pub tile_texture_name: &'static str,
 }
 
@@ -99,6 +100,8 @@ pub fn update_stacks (
     mut state_stack: Mut<StateStack>,
 ) {
     let index = stack.index;
+
+    stack.index_max = stack.index_max.min(STACK_MAX_SIZE);
 
     // physics engine
     update_stack(

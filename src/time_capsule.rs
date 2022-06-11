@@ -1,5 +1,6 @@
 use dotrix::{
-    Assets, World, Transform,
+    Assets, World, Transform, Id,
+    assets::Mesh,
     pbr::{ Model, Material, },
     ecs::{ Mut, Entity, },
     math::{ Vec3, Quat, InnerSpace, },
@@ -13,32 +14,20 @@ const SCALE: f32 = 0.4;
 const MIN_DIST: f32 = 0.75;
 
 pub struct State {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub collected: bool,
+    position: Vec3,
 }
 
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            x: 45.0,
-            z: 10.0,
-            y: 1.1,
-            collected: false,
-        }
-    }
-}
-
-pub fn startup(
-    mut assets: Mut<Assets>,
-) {
+pub fn load_assets(
+    assets: &mut Assets,
+) -> Id<Mesh> {
     assets.import("assets/time_capsule.gltf");
+    assets.register("time_capsule::mesh")
 }
 
 pub fn spawn(
-    mut world: Mut<World>,
-    mut assets: Mut<Assets>,
+    world: &mut World,
+    assets: &mut Assets,
+    position: Vec3,
 ) {
     let texture = assets.register("time_capsule::texture");
     let mesh = assets.register("time_capsule::mesh");
@@ -53,7 +42,7 @@ pub fn spawn(
             scale: Vec3::new(SCALE, SCALE, SCALE),
             ..Default::default()
         },
-        State::default(),
+        State{ position },
         Render::default(),
     )));
 }
@@ -64,10 +53,12 @@ pub fn control(
 ) {
     // player
     let mut player_x = 0.0;
+    let mut player_y = 0.0;
     let mut player_z = 0.0;
     let query = world.query::<(&player::State, &Transform)>();
     for (_, transform) in query {
         player_x = transform.translate.x;
+        player_y = transform.translate.y;
         player_z = transform.translate.z;
     }
 
@@ -86,18 +77,16 @@ pub fn control(
 
         transform.rotate = transform.rotate * q;
 
-        transform.translate.x = state.x;
-        transform.translate.y = state.y;
-        transform.translate.z = state.z;
+        transform.translate = state.position;
 
-        let dist_to_capsule = ((player_x-state.x).powf(2.0)+(player_z-state.z).powf(2.0)).sqrt();
+        let dist_to_capsule = (
+            (player_x-state.position.x).powf(2.0)+
+            (player_y-state.position.y).powf(2.0)+
+            (player_z-state.position.z).powf(2.0)
+        ).sqrt();
 
-        if dist_to_capsule <= MIN_DIST {
-            state.collected = true;
-            time_stack.index_max += time::STACK_MAX_SIZE;
-        }
-
-        if state.collected {
+        if (dist_to_capsule<=MIN_DIST) && (time_stack.index_max<time::STACK_MAX_SIZE) {
+            time_stack.index_max += time::STACK_MAX_SIZE / 2;
             to_exile.push(*entity);
         }
     }

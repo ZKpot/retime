@@ -25,29 +25,22 @@ fn main() {
     Dotrix::application("ReTime")
         .with(System::from(ui::startup))
         .with(System::from(startup))
-        .with(System::from(player::startup))
-        .with(System::from(level::startup))
-        .with(System::from(trampoline::startup))
-        .with(System::from(time_capsule::startup))
 
-        .with(System::from(ui::draw_menu))
-        .with(System::from(ui::draw_in_game_panels))
+        .with(System::from(ui::draw_main_menu).with(StateStack::on::<states::MainMenu>()))
 
-        .with(System::from(before_init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(camera::init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(ui::init).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(level::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(trampoline::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(player::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(time_capsule::spawn).with(StateStack::on::<states::LevelInit>()))
-        .with(System::from(states::after_init).with(StateStack::on::<states::LevelInit>()))
+        .with(System::from(ui::draw_loading_screen).with(StateStack::on::<states::LoadAssets>()))
+        .with(System::from(level::load_assets).with(StateStack::on::<states::LoadAssets>()))
+
+        .with(System::from(before_init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(camera::init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(ui::init).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(level::spawn).with(StateStack::on::<states::InitLevel>()))
+        .with(System::from(states::after_init).with(StateStack::on::<states::InitLevel>()))
 
         .with(System::from(time::rewind).with(StateStack::on::<states::RewindTime>()))
         .with(System::from(time::replay).with(StateStack::on::<states::RunLevel>()))
         .with(System::from(player::control).with(StateStack::on::<states::RunLevel>()))
         .with(System::from(trampoline::control).with(StateStack::on::<states::RunLevel>()))
-
-        .with(System::from(time::update_stacks).with(StateStack::on::<states::RunLevel>()))
         .with(
             System::from(states::update)
                 .with(StateStack::on::<states::RunLevel>())
@@ -58,6 +51,7 @@ fn main() {
                 .with(StateStack::on::<states::RunLevel>())
                 .with(StateStack::on::<states::RewindTime>())
         )
+        .with(System::from(time::update_stacks).with(StateStack::on::<states::RunLevel>()))
 
         .with(System::from(physics::update_models))
         .with(System::from(physics::step).with(StateStack::on::<states::RunLevel>()))
@@ -72,11 +66,27 @@ fn main() {
                 .with(StateStack::on::<states::RewindTime>())
         )
 
+        .with(System::from(ui::draw_menu)
+            .with(StateStack::on::<states::RunLevel>())
+            .with(StateStack::on::<states::RewindTime>())
+            .with(StateStack::on::<states::Pause>())
+        )
+        .with(System::from(ui::draw_in_game_panels)
+            .with(StateStack::on::<states::RunLevel>())
+            .with(StateStack::on::<states::RewindTime>())
+        )
+        .with(
+            System::from(ui::draw_background)
+                .with(StateStack::on::<states::MainMenu>())
+                .with(StateStack::on::<states::LoadAssets>())
+        )
+
         .with(Service::from(physics::State::default()))
         .with(Service::from(time::Stack::default()))
         .with(Service::from(camera::State::default()))
         .with(Service::from(ui::State::default()))
-        .with(Service::from(states::Stats::default()))
+        .with(Service::from(None as Option<states::Stats>))
+        .with(Service::from(None as Option<level::Level>))
 
         .with(pbr::extension)
         .with(skybox::extension)
@@ -92,7 +102,7 @@ fn startup(
 ) {
     actions::init_actions(&mut input);
 
-    state_stack.push(states::LevelInit {});
+    state_stack.push(states::MainMenu {selected_level: None});
 }
 
 fn before_init(

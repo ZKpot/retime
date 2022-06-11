@@ -1,7 +1,8 @@
 use dotrix::{
-    Assets, World, Transform, Input,
+    Assets, World, Transform, Input, Id,
+    assets::Mesh,
     pbr::{ Model, Material, },
-    ecs::{ Mut, Const, },
+    ecs::{ Mut, Const, Entity, },
     math::{ Vec3 },
     renderer::Render,
 };
@@ -55,18 +56,20 @@ pub struct Action {
     pub torque_rotate: Vector<Real>,
 }
 
-pub fn startup(
-    mut assets: Mut<Assets>,
-) {
+pub fn load_assets(
+    assets: &mut Assets,
+) -> Id<Mesh> {
     assets.import("assets/player.gltf");
     assets.import("assets/player.png");
+    assets.register("player::mesh")
 }
 
 pub fn spawn(
-    mut world: Mut<World>,
-    mut assets: Mut<Assets>,
-    mut physics_state: Mut<physics::State>,
-) {
+    world: &mut World,
+    assets: &mut Assets,
+    physics_state: &mut physics::State,
+    player_position: Vec3,
+) -> Entity {
     let state = physics_state.physics.as_mut().expect("physics::State must be defined");
 
     let texture = assets.register("player::texture");
@@ -91,19 +94,19 @@ pub fn spawn(
             ..Default::default()
         },
         Transform {
-            translate: Vec3::new(0.0, 10.0, 0.0),
+            translate: player_position,
             ..Default::default()
         },
         Render::default(),
         time::ActionableObject {
             active: true,
             selected: true,
-            is_player: &true,
+            is_player: true,
             tile_texture_name: "player",
         },
         State::default(),
         ball_body_handle,
-    )));
+    ))).first()
 }
 
 pub fn control(

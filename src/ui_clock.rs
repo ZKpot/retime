@@ -28,18 +28,14 @@ impl Clock {
 impl Widget for Clock {
     fn ui(self, ui: &mut Ui) -> Response {
         let Clock {
-            mut elapsed,
-            mut current_rewind,
-            mut max_rewind,
+            elapsed,
+            current_rewind,
+            max_rewind,
             size,
         } = self;
 
         let full_clock = elapsed >= 2.0*PI;
         let max_rewind_full = max_rewind >= 2.0*PI;
-
-        elapsed %= 2.0*PI;
-        current_rewind %= 2.0*PI;
-        max_rewind %= 2.0*PI;
 
         let offset = PI/2.0;
 
@@ -174,6 +170,6 @@ fn arc_shape(
         points,
         closed: true,
         fill,
-        stroke: Stroke::new(1.0, fill),
+        stroke: Stroke::new(2.0, fill),
     }
 }
